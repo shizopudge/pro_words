@@ -1,4 +1,5 @@
 import 'package:logger/logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Locator {
   const Locator._();
@@ -12,8 +13,6 @@ class Locator {
   /// ------
   /// Logger
   /// ------
-  static String get kLogger => 'logger';
-
   static Logger get logger {
     final logger = _map[kLogger] as Logger?;
     if (logger == null) {
@@ -22,5 +21,23 @@ class Locator {
     return logger;
   }
 
+  static String get kLogger => 'logger';
+
   static set logger(Logger logger) => _map[kLogger] = logger;
+
+  /// ------
+  /// Shared preferences
+  /// ------
+  static SharedPreferences get sharedPreferences {
+    final sharedPreferences = _map[kSharedPreferences] as SharedPreferences?;
+    if (sharedPreferences == null) {
+      throw Exception('Shared preferences was not initialized yet');
+    }
+    return sharedPreferences;
+  }
+
+  static String get kSharedPreferences => 'sharedPreferences';
+
+  static set sharedPreferences(SharedPreferences sharedPreferences) =>
+      _map[kSharedPreferences] = sharedPreferences;
 }

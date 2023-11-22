@@ -1,67 +1,129 @@
 import 'package:flutter/material.dart';
+import 'package:pro_words/app/locator.dart';
+
+// TODO: Вынести эти переменные по темам и придумать, где хранить ключи для
+// локального хранилища. Вынести сами темы.
+
+const String kDarkThemeKey = 'dark';
+
+const String kLightThemeKey = 'light';
+
+const String kThemeLocalStorageKey = 'theme';
+
+/// Dark theme
+final darkTheme = ThemeData.dark();
+
+/// Light theme
+final lightTheme = ThemeData.light();
 
 @immutable
-class ThemeScope extends StatefulWidget {
-  /// Дочерний виджет
+class ThemeProvider extends StatefulWidget {
+  /// Child widget
   final Widget child;
 
-  /// Theme scope
-  const ThemeScope({
+  /// Theme scope data
+  const ThemeProvider({
     required this.child,
     super.key,
   });
 
-  static ThemeScopeData of(BuildContext context, {bool watch = true}) {
-    _Scope? scope;
-
-    if (watch) {
-      scope = context.dependOnInheritedWidgetOfExactType<_Scope>();
-    } else {
-      scope = context.getInheritedWidgetOfExactType<_Scope>();
-    }
-
-    if (scope == null) {
-      throw FlutterError(
-        'ThemeScopeData was requested with a context that does not include an ThemeScopeData.',
-      );
-    }
-
-    return scope.themeScopeData;
-  }
-
   @override
-  State<ThemeScope> createState() => ThemeScopeData();
+  State<ThemeProvider> createState() => _ThemeProviderState();
 }
 
-class ThemeScopeData extends State<ThemeScope> {
-  /// Dark theme
-  static final darkTheme = ThemeData.dark();
-
-  /// Light theme
-  static final lightTheme = ThemeData.light();
-
+class _ThemeProviderState extends State<ThemeProvider> {
   /// {@template theme_controller}
-  /// Theme controller
+  /// Controller of theme
   /// {@endtemplate}
   late final ValueNotifier<ThemeData> _themeController;
 
   @override
   void initState() {
     super.initState();
-    _themeController = ValueNotifier(darkTheme);
+    _themeController = ValueNotifier<ThemeData>(_currentThemeFromLocalStorage)
+      ..addListener(_onThemeChange);
   }
 
   @override
   void dispose() {
-    _themeController.dispose();
+    _themeController
+      ..removeListener(_onThemeChange)
+      ..dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => _Scope(
-        themeScopeData: this,
+  Widget build(BuildContext context) => ThemeScope(
+        themeController: _themeController,
         child: widget.child,
       );
+
+  /// Method that would be executed when theme changes
+  Future<void> _onThemeChange() async {
+    try {
+      late final String newThemeKey;
+      if (_themeController.value == darkTheme) {
+        newThemeKey = kDarkThemeKey;
+      } else {
+        newThemeKey = kLightThemeKey;
+      }
+      await Locator.sharedPreferences.setString(
+        kThemeLocalStorageKey,
+        newThemeKey,
+      );
+    } on Object catch (error, stackTrace) {
+      Locator.logger.e(
+        'Something went wrong while new theme key was writing to local storage',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  /// Returns current theme from local storage
+  ThemeData get _currentThemeFromLocalStorage {
+    final themeKey =
+        Locator.sharedPreferences.getString(kThemeLocalStorageKey) ??
+            kDarkThemeKey;
+    if (themeKey == kDarkThemeKey) {
+      return darkTheme;
+    }
+    return lightTheme;
+  }
+}
+
+@immutable
+class ThemeScope extends InheritedWidget {
+  /// {@macro theme_controller}
+  final ValueNotifier<ThemeData> themeController;
+
+  /// Scope
+  const ThemeScope({
+    required this.themeController,
+    required super.child,
+    super.key,
+  });
+
+  static ThemeScope of(BuildContext context, {bool watch = true}) {
+    ThemeScope? scope;
+
+    if (watch) {
+      scope = context.dependOnInheritedWidgetOfExactType<ThemeScope>();
+    } else {
+      scope = context.getInheritedWidgetOfExactType<ThemeScope>();
+    }
+
+    if (scope == null) {
+      throw FlutterError(
+        'ThemeScope was requested with a context that does not include an ThemeScope.',
+      );
+    }
+
+    return scope;
+  }
+
+  @override
+  bool updateShouldNotify(ThemeScope oldWidget) => true;
 
   /// Toggle theme method
   void toggleTheme() {
@@ -73,36 +135,21 @@ class ThemeScopeData extends State<ThemeScope> {
   }
 
   /// Theme controller
-  ValueNotifier<ThemeData> get controller => _themeController;
+  ValueNotifier<ThemeData> get controller => themeController;
 
-  /// Theme getter
-  ThemeData get theme => _themeController.value;
+  /// Theme data getter
+  ThemeData get theme => themeController.value;
 
   /// Theme setter
   set theme(ThemeData data) {
-    if (_themeController.value != data) {
-      _themeController.value = data;
+    if (themeController.value != data) {
+      themeController.value = data;
     }
   }
 
   /// Returns true when theme is dark
-  bool get isDarkTheme => _themeController.value == darkTheme;
+  bool get isDarkTheme => themeController.value == darkTheme;
 
   /// Returns true when theme is light
-  bool get isLightheme => _themeController.value == lightTheme;
-}
-
-@immutable
-class _Scope extends InheritedWidget {
-  /// Theme scope data
-  final ThemeScopeData themeScopeData;
-
-  /// Scope
-  const _Scope({
-    required this.themeScopeData,
-    required super.child,
-  });
-
-  @override
-  bool updateShouldNotify(_Scope oldWidget) => true;
+  bool get isLightTheme => themeController.value == lightTheme;
 }

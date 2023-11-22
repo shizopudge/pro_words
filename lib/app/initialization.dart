@@ -9,21 +9,33 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logger/logger.dart';
 import 'package:pro_words/app/bloc_observer.dart';
 import 'package:pro_words/app/locator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AppInitialization {
   /// App initialization method
   static Future<void> init() async {
     WidgetsFlutterBinding.ensureInitialized();
     _initLogger();
+    await _initSharedPreferences();
     await _initFirebase();
     _initCrashlytics();
     Bloc.observer = const AppBlocObserver();
   }
 
   /// Logger initialization
-  static void _initLogger() {
-    final logger = Logger();
-    Locator.logger = logger;
+  static void _initLogger() => Locator.logger = Logger();
+
+  /// Shared preferences initialization
+  static Future<void> _initSharedPreferences() async {
+    try {
+      Locator.sharedPreferences = await SharedPreferences.getInstance();
+    } on Object catch (error, stackTrace) {
+      Locator.logger.e(
+        'Something went wrong while SharedPreferences was initializing',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   /// Firebase initialization
