@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-extension WidgetX on Widget? {
+extension WidgetNullableX on Widget? {
   /// Simple extension for nullable widgets
   ///
   /// if widget == null returns [SizedBox.shrink] otherwise
@@ -14,4 +14,12 @@ extension WidgetX on Widget? {
 
     return widget;
   }
+}
+
+extension WidgetX on Widget {
+  /// Extension for adding padding to widget
+  Widget addPadding(EdgeInsets padding) => Padding(
+        padding: padding,
+        child: this,
+      );
 }

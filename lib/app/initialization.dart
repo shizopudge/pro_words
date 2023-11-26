@@ -1,17 +1,21 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:logger/logger.dart';
 import 'package:pro_words/app/bloc_observer.dart';
-import 'package:pro_words/app/locator.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pro_words/core/key_local_storage/src/key_local_storage.dart';
+import 'package:pro_words/core/logger/logger.dart';
 
+/// {@template app_initialization}
+/// App initialization
+/// {@endtemplate}
+@immutable
 class AppInitialization {
+  /// {@macro app_initialization}
+  const AppInitialization._();
+
   /// App initialization method
   static Future<void> init() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -23,45 +27,38 @@ class AppInitialization {
   }
 
   /// Logger initialization
-  static void _initLogger() => Locator.logger = Logger();
+  static void _initLogger() => L.init();
 
   /// Shared preferences initialization
-  static Future<void> _initSharedPreferences() async {
-    try {
-      Locator.sharedPreferences = await SharedPreferences.getInstance();
-    } on Object catch (error, stackTrace) {
-      Locator.logger.e(
-        'Something went wrong while SharedPreferences was initializing',
-        error: error,
-        stackTrace: stackTrace,
-      );
-    }
-  }
+  static Future<void> _initSharedPreferences() async =>
+      await KeyLocalStorage.init();
 
   /// Firebase initialization
   static Future<void> _initFirebase() async {
-    await Firebase.initializeApp();
+    // await Firebase.initializeApp();
   }
 
   /// Crashlytics initialization
   static void _initCrashlytics() {
     FlutterError.onError = (errorDetails) {
-      Locator.logger.d('Caught error in FlutterError.onError');
-      FirebaseCrashlytics.instance.recordFlutterError(errorDetails);
+      L.log('Caught error in FlutterError.onError');
+      // FirebaseCrashlytics.instance.recordFlutterError(errorDetails);
     };
     PlatformDispatcher.instance.onError = (error, stack) {
-      Locator.logger.d('Caught error in PlatformDispatcher.onError');
-      FirebaseCrashlytics.instance.recordError(
-        error,
-        stack,
-        fatal: true,
-      );
+      L.log('Caught error in PlatformDispatcher.onError');
+      // FirebaseCrashlytics.instance.recordError(
+      //   error,
+      //   stack,
+      //   fatal: true,
+      // );
       return true;
     };
   }
 
   /// Dispose initialization  method
-  static void dispose() {}
+  static Future<void> dispose() async {
+    await L.dispose();
+  }
 }
 
 class InitializationStep extends Equatable {

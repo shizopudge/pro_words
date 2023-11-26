@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pro_words/app/locator.dart';
+import 'package:pro_words/core/logger/logger.dart';
 
 /// {@template app_bloc_observer}
 /// Custom [BlocObserver] that observes all bloc and cubit state changes.
@@ -13,38 +13,38 @@ class AppBlocObserver extends BlocObserver {
   @override
   void onChange(BlocBase bloc, Change change) {
     super.onChange(bloc, change);
-    Locator.logger.d(
+    L.log(
         '$bloc changed. Current state: ${change.currentState}. Next state: ${change.nextState}');
   }
 
   @override
   void onClose(BlocBase bloc) {
     super.onClose(bloc);
-    Locator.logger.d('$bloc closed');
+    L.log('$bloc closed');
   }
 
   @override
   void onCreate(BlocBase bloc) {
     super.onCreate(bloc);
-    Locator.logger.d('$bloc created');
+    L.log('$bloc created');
   }
 
   @override
   void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
     super.onError(bloc, error, stackTrace);
-    Locator.logger.d('Error in $bloc. Error: $error. StackTrace: $stackTrace');
+    L.log('Error in $bloc. Error: $error. StackTrace: $stackTrace');
   }
 
   @override
   void onEvent(Bloc bloc, Object? event) {
     super.onEvent(bloc, event);
-    Locator.logger.d('Event in $bloc. Event: $event.');
+    L.log('Event in $bloc. Event: $event.');
   }
 
   @override
   void onTransition(Bloc bloc, Transition transition) {
     super.onTransition(bloc, transition);
-    Locator.logger.d(
+    L.log(
         'Transition in $bloc. Event: ${transition.event}. Current state: ${transition.currentState}. Next state: ${transition.nextState}.');
   }
 }
