@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
 /// {@template app_colors}
-/// App colors
+/// Цвета приложения
 /// {@endtemplate}
 @immutable
 class AppColors {
   /// {@macro app_colors}
-  const AppColors();
+  const AppColors._();
+
+  /// Экземпляр класса цветов пиложения
+  static AppColors get instance => const AppColors._();
 
   /// White
   Color get white => Colors.white;

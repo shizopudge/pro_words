@@ -1,8 +1,9 @@
-/// Keys enum for key local storage
+/// Енум для ключей локального хранилища
 enum StorageKeys {
+  /// Ключ темы
   theme('theme');
 
-  /// Key of storage value
+  /// Ключ локального хранилища
   final String key;
 
   const StorageKeys(this.key);

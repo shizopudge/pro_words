@@ -3,25 +3,25 @@ import 'package:pro_words/core/extensions/extensions.dart';
 
 @immutable
 class PrimaryLoadingIndicator extends StatelessWidget {
-  /// Size
+  /// Размер
   final double size;
 
-  /// Inner padding
+  /// Внутренние отступы
   final EdgeInsets innerPadding;
 
-  /// Stroke width
-  final double strokeWidth;
-
-  /// Outer padding
+  /// Внешние отступы
   final EdgeInsets? outerPadding;
 
-  /// Background color
+  /// Ширина линии, используемой для рисования круга
+  final double strokeWidth;
+
+  /// Цвет заднего фона
   final Color? backgroundColor;
 
-  /// Indicator color
+  /// Цвет индикатора
   final Color? indicatorColor;
 
-  /// Border color
+  /// Цвет границ
   final Color? borderColor;
 
   /// Primary loading indicator

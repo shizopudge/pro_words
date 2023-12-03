@@ -1,51 +1,124 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:pro_words/core/logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// {@template key_local_storage}
-/// Key local storage
+/// Локальное key-value хранилище
 /// {@endtemplate}
 @immutable
-class KeyLocalStorage {
+abstract interface class IKeyLocalStorage {
+  /// Записывает значение
+  Future<void> setValue(String key, String value);
+
+  /// Получает значение
+  String? getValue(String key);
+
+  /// Возвращает все ключи
+  Set<String>? getKeys();
+
+  /// Возвращает все ключи
+  bool? containsKey(String key);
+
+  /// Удаляет значение
+  Future<bool?> remove(String key);
+
+  /// Очищает хранилище
+  Future<bool?> clear();
+}
+
+/// {@macro key_local_storage}
+@immutable
+class KeyLocalStorage implements IKeyLocalStorage {
+  /// Экземпляр SharedPreferences
+  final SharedPreferences _sharedPreferences;
+
   /// {@macro key_local_storage}
-  const KeyLocalStorage._();
+  const KeyLocalStorage({
+    required final SharedPreferences sharedPreferences,
+  }) : _sharedPreferences = sharedPreferences;
 
-  /// Shared preferences
-  static SharedPreferences? _sharedPreferences;
-
-  /// Initialization
-  static Future<void> init() async {
+  @override
+  Future<void> setValue(String key, String value) async {
     try {
-      _sharedPreferences = await SharedPreferences.getInstance();
+      _sharedPreferences.setString(key, value).timeout(
+            const Duration(milliseconds: 15000),
+          );
     } on Object catch (error, stackTrace) {
       L.error(
-        'Something went wrong while KeyLocalStorage was initializing',
+        'Something went wrong during setting value',
         error: error,
         stackTrace: stackTrace,
       );
     }
   }
 
-  /// Set value
-  static Future<void> setValue(String key, String value) async {
+  @override
+  String? getValue(String key) {
     try {
-      _sharedPreferences?.setString(key, value);
+      return _sharedPreferences.getString(key);
     } on Object catch (error, stackTrace) {
       L.error(
-        'Something went wrong while setting value',
+        'Something went wrong during getting value',
         error: error,
         stackTrace: stackTrace,
       );
     }
+    return null;
   }
 
-  /// Get value
-  static String? getValue(String key) {
+  @override
+  Set<String>? getKeys() {
     try {
-      return _sharedPreferences?.getString(key);
+      return _sharedPreferences.getKeys();
     } on Object catch (error, stackTrace) {
       L.error(
-        'Something went wrong while getting value',
+        'Something went wrong during getting keys',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+    return null;
+  }
+
+  @override
+  bool? containsKey(String key) {
+    try {
+      return _sharedPreferences.containsKey(key);
+    } on Object catch (error, stackTrace) {
+      L.error(
+        'Something went wrong during key contain check',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+    return null;
+  }
+
+  @override
+  Future<bool?> remove(String key) async {
+    try {
+      return await _sharedPreferences.remove(key).timeout(
+            const Duration(milliseconds: 15000),
+          );
+    } on Object catch (error, stackTrace) {
+      L.error(
+        'Something went wrong during removing value',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+    return null;
+  }
+
+  @override
+  Future<bool?> clear() async {
+    try {
+      return await _sharedPreferences.clear().timeout(
+            const Duration(milliseconds: 15000),
+          );
+    } on Object catch (error, stackTrace) {
+      L.error(
+        'Something went wrong during clearing',
         error: error,
         stackTrace: stackTrace,
       );

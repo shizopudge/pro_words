@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:pro_words/core/theme/theme.dart';
 
 extension BuildContextX on BuildContext {
-  /// Theme data
+  /// Tема
   ThemeData get theme => Theme.of(this);
 
-  /// Media query data
+  /// Media query
   MediaQueryData get mediaQuery => MediaQuery.of(this);
 
-  /// App colors
-  AppColors get colors => const AppColors();
+  /// {@macro app_colors}
+  AppColors get colors => AppColors.instance;
 }

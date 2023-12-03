@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pro_words/app/app_di.dart';
 import 'package:pro_words/app/initialization.dart';
 import 'package:pro_words/core/extensions/extensions.dart';
 import 'package:pro_words/core/theme/src/theme_scope.dart';
@@ -7,7 +8,7 @@ import 'package:pro_words/core/ui_kit/app_kit/src/primary_loading_indicator.dart
 
 @immutable
 class Main extends StatefulWidget {
-  /// Main app widget
+  /// Первый виджет приложения
   const Main({super.key});
 
   @override
@@ -16,9 +17,9 @@ class Main extends StatefulWidget {
 
 class _MainState extends State<Main> {
   /// {@template app_initialization_future}
-  /// Future of app initializtion
+  /// Future инициализации приложения
   /// {@endtemplate}
-  late final Future<void> _appInitializationFuture;
+  late final Future<AppCoreModules> _appInitializationFuture;
 
   @override
   void initState() {
@@ -36,42 +37,57 @@ class _MainState extends State<Main> {
   Widget build(BuildContext context) => FutureBuilder(
         future: _appInitializationFuture,
         builder: (context, snapshot) {
-          if (snapshot.hasError) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const _AppInitializationProgress();
+          }
+
+          final appCoreModules = snapshot.data;
+
+          if (snapshot.hasError || appCoreModules == null) {
             return _AppInitializationError(
                 error: snapshot.error, stackTrace: snapshot.stackTrace);
           }
 
-          if (snapshot.connectionState != ConnectionState.done &&
-              snapshot.hasData) {
-            return const _AppInitializationProgress();
-          }
-
-          return const ProviderScope(
-            child: ThemeScope(
-              child: _App(),
-            ),
+          return _GlobalScopes(
+            appCoreModules: appCoreModules,
+            app: _App(appCoreModules: appCoreModules),
           );
         },
       );
 }
 
 @immutable
-class _App extends StatelessWidget {
+class _App extends ConsumerWidget {
+  /// {@macro app_core_modules}
+  final AppCoreModules appCoreModules;
+
   /// App
-  const _App();
+  const _App({
+    required this.appCoreModules,
+  });
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-        theme: ThemeScope.getTheme(context),
-        home: Scaffold(
-          body: Center(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber.shade200,
-                foregroundColor: Colors.deepOrange.shade900,
-              ),
-              onPressed: ThemeScope.of(context).toggleTheme,
-              child: const Text('Toggle Theme'),
+  Widget build(BuildContext context, WidgetRef ref) => MaterialApp.router(
+        theme: ThemeScope.getTheme(context, listen: true),
+        routerConfig: ref.watch(AppDI.appRouter).config(
+              placeholder: (context) => const _AppPlaceholder(),
+            ),
+      );
+}
+
+@immutable
+class _AppPlaceholder extends StatelessWidget {
+  /// Заполнитель приложения
+  const _AppPlaceholder();
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        body: Center(
+          child: Text(
+            'Placeholder',
+            textAlign: TextAlign.center,
+            style: context.theme.textTheme.headlineLarge?.copyWith(
+              color: context.colors.black,
             ),
           ),
         ),
@@ -152,6 +168,31 @@ class _AppInitializationError extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      );
+}
+
+@immutable
+class _GlobalScopes extends StatelessWidget {
+  /// Виджет с MaterialApp приложения
+  final _App app;
+
+  /// {@macro app_core_modules}
+  final AppCoreModules appCoreModules;
+
+  /// Глобальные области видимости приложения
+  const _GlobalScopes({
+    required this.app,
+    required this.appCoreModules,
+  });
+
+  @override
+  Widget build(BuildContext context) => ProviderScope(
+        overrides: [
+          AppDI.appCoreModulesProvider.overrideWithValue(appCoreModules),
+        ],
+        child: ThemeScope(
+          child: app,
         ),
       );
 }

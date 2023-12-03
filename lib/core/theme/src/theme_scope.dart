@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:pro_words/core/key_local_storage/src/key_local_storage.dart';
-import 'package:pro_words/core/key_local_storage/src/storage_keys.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pro_words/app/app_di.dart';
+import 'package:pro_words/core/key_local_storage/key_local_storage.dart';
 import 'package:pro_words/core/logger/logger.dart';
 import 'package:pro_words/core/theme/theme.dart';
 
 @immutable
-class ThemeScope extends StatefulWidget {
+class ThemeScope extends ConsumerStatefulWidget {
   /// Child widget
   final Widget child;
 
@@ -15,9 +16,9 @@ class ThemeScope extends StatefulWidget {
     super.key,
   });
 
-  /// Return a theme scope state if BuildContext include a ThemeScope,
-  /// otherwise throws an [FlutterError]
-  static ThemeScopeState of(BuildContext context, {bool listen = true}) {
+  /// Возвращает стейт области видимости темы приложения, если BuildContext
+  /// содержит ThemeScope, иначе выкидывает ошибку [FlutterError]
+  static ThemeScopeState of(BuildContext context, {bool listen = false}) {
     _ThemeProvider? scope;
 
     if (listen) {
@@ -28,16 +29,17 @@ class ThemeScope extends StatefulWidget {
 
     if (scope == null) {
       throw FlutterError(
-        'ThemeScope was requested with a context that does not include an ThemeScope.',
+        'ThemeScope was requested with a context that does not include an'
+        ' ThemeScope.',
       );
     }
 
     return scope.state;
   }
 
-  /// Return a theme data if BuildContext include a ThemeScope,
-  /// otherwise throws an [FlutterError]
-  static ThemeData getTheme(BuildContext context, {bool listen = true}) {
+  /// Возвращает тему приложения, если BuildContext содержит ThemeScope,
+  /// иначе выкидывает ошибку [FlutterError]
+  static ThemeData getTheme(BuildContext context, {bool listen = false}) {
     _ThemeProvider? scope;
 
     if (listen) {
@@ -48,7 +50,8 @@ class ThemeScope extends StatefulWidget {
 
     if (scope == null) {
       throw FlutterError(
-        'ThemeScope was requested with a context that does not include an ThemeScope.',
+        'ThemeScope was requested with a context that does not include an'
+        ' ThemeScope.',
       );
     }
 
@@ -56,18 +59,22 @@ class ThemeScope extends StatefulWidget {
   }
 
   @override
-  State<ThemeScope> createState() => ThemeScopeState();
+  ConsumerState<ThemeScope> createState() => ThemeScopeState();
 }
 
-class ThemeScopeState extends State<ThemeScope> {
+class ThemeScopeState extends ConsumerState<ThemeScope> {
   /// {@template theme_controller}
-  /// Controller of theme
+  /// Контроллер темы приложения
   /// {@endtemplate}
   late final ValueNotifier<ThemeData> _themeController;
+
+  /// {@macro key_local_storage}
+  late final IKeyLocalStorage _keyLocalStorage;
 
   @override
   void initState() {
     super.initState();
+    _keyLocalStorage = ref.read(AppDI.appCoreModulesProvider).keyLocalStorage;
     _themeController = ValueNotifier<ThemeData>(_currentThemeFromLocalStorage)
       ..addListener(_onThemeChange);
   }
@@ -90,7 +97,7 @@ class ThemeScopeState extends State<ThemeScope> {
         ),
       );
 
-  /// Toggle theme method
+  /// Перекючает тему
   void toggleTheme() {
     if (isDarkTheme) {
       theme = AppTheme.lightTheme;
@@ -99,7 +106,7 @@ class ThemeScopeState extends State<ThemeScope> {
     }
   }
 
-  /// Method that would be executed when theme changes
+  /// Метод вызывающийся при смене темы
   Future<void> _onThemeChange() async {
     try {
       late final String newThemeKey;
@@ -108,7 +115,7 @@ class ThemeScopeState extends State<ThemeScope> {
       } else {
         newThemeKey = AppTheme.lightThemeKey;
       }
-      await KeyLocalStorage.setValue(
+      await _keyLocalStorage.setValue(
         StorageKeys.theme.key,
         newThemeKey,
       );
@@ -121,9 +128,9 @@ class ThemeScopeState extends State<ThemeScope> {
     }
   }
 
-  /// Returns current theme from local storage
+  /// Возвращает текущую тему и локального хранилища
   ThemeData get _currentThemeFromLocalStorage {
-    final themeKey = KeyLocalStorage.getValue(StorageKeys.theme.key) ??
+    final themeKey = _keyLocalStorage.getValue(StorageKeys.theme.key) ??
         AppTheme.darkThemeKey;
     if (themeKey == AppTheme.darkThemeKey) {
       return AppTheme.darkTheme;
@@ -131,32 +138,35 @@ class ThemeScopeState extends State<ThemeScope> {
     return AppTheme.lightTheme;
   }
 
-  /// Theme data getter
+  /// Возвращает тему
   ThemeData get theme => _themeController.value;
 
-  /// Theme setter
+  /// Устанавливает тему
   set theme(ThemeData data) {
     if (_themeController.value != data) {
       _themeController.value = data;
     }
   }
 
-  /// Returns true when theme is dark
+  /// Возвращает true, если тема темная
   bool get isDarkTheme => _themeController.value == AppTheme.darkTheme;
 
-  /// Returns true when theme is light
+  /// Возвращает true, если тема cdtnkfz
   bool get isLightTheme => _themeController.value == AppTheme.lightTheme;
+
+  /// Возвращает контроллер темы приложения
+  ValueNotifier<ThemeData> get controller => _themeController;
 }
 
 @immutable
 class _ThemeProvider extends InheritedWidget {
-  /// Theme scope state
+  /// Стейт области видимости темы приложения
   final ThemeScopeState state;
 
-  /// Theme data
+  /// Тема приложения
   final ThemeData theme;
 
-  /// Theme provider
+  /// Поставщик стейта области видимости темы приложения
   const _ThemeProvider({
     required this.state,
     required this.theme,
