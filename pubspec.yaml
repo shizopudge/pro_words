@@ -13,6 +13,11 @@ dependencies:
   # Equatable
   equatable: ^2.0.5
 
+  # Localizations & Intl
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.18.1
+
   # Firebase
   firebase_analytics: ^10.7.0
   firebase_core: ^2.22.0
@@ -26,9 +31,10 @@ dependencies:
   google_ml_kit: ^0.16.3
   speech_to_text: ^6.4.1
   auto_route: ^7.8.4
+  flutter_svg: ^2.0.9
 
-  # DI
-  flutter_riverpod: ^2.4.6
+  # Animations
+  lottie: ^2.7.0
 
   # Annotations
   freezed_annotation: ^2.4.1
@@ -51,6 +57,70 @@ dev_dependencies:
   freezed: ^2.4.5
   json_serializable: ^6.7.1
   auto_route_generator: ^7.3.2
+  flutter_gen_runner: ^5.3.1
+
+flutter_gen:
+  output: lib/src/core/resources/src
+  line_length: 80
+
+  # Optional
+  integrations:
+    flutter_svg: true
 
 flutter:
+  # Enable generation of localized Strings from arb files.
+  # generate: true
   uses-material-design: true
+  assets:
+    - assets/icons/
+    - assets/fonts/
+    - assets/animations/
+
+  fonts:
+    - family: Plus Jakarta Sans
+      fonts:
+        # Extra Bold
+        - asset: assets/fonts/PlusJakartaSans-ExtraBold.ttf
+          weight: 800
+        # Extra Bold Italic
+        - asset: assets/fonts/PlusJakartaSans-ExtraBoldItalic.ttf
+          weight: 800
+          style: italic
+        # Bold
+        - asset: assets/fonts/PlusJakartaSans-Bold.ttf
+          weight: 700
+        # Bold Italic
+        - asset: assets/fonts/PlusJakartaSans-BoldItalic.ttf
+          weight: 700
+          style: italic
+        # Semibold
+        - asset: assets/fonts/PlusJakartaSans-SemiBold.ttf
+          weight: 600
+        # Semibold Italic
+        - asset: assets/fonts/PlusJakartaSans-SemiBoldItalic.ttf
+          weight: 600
+          style: italic
+        # Medium
+        - asset: assets/fonts/PlusJakartaSans-Medium.ttf
+          weight: 500
+        # Medium Italic
+        - asset: assets/fonts/PlusJakartaSans-MediumItalic.ttf
+          weight: 500
+          style: italic
+        # Regular
+        - asset: assets/fonts/PlusJakartaSans-Regular.ttf
+          weight: 400
+        # Light
+        - asset: assets/fonts/PlusJakartaSans-Light.ttf
+          weight: 300
+        # Light Italic
+        - asset: assets/fonts/PlusJakartaSans-LightItalic.ttf
+          weight: 300
+          style: italic
+        # Ultralight
+        - asset: assets/fonts/PlusJakartaSans-ExtraLight.ttf
+          weight: 200
+        # Ultralight Italic
+        - asset: assets/fonts/PlusJakartaSans-ExtraLightItalic.ttf
+          weight: 200
+          style: italic
