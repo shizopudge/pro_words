@@ -2,21 +2,24 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:pro_words/src/core/resources/resources.dart';
 
 @immutable
-class AnimatedErrorIcon extends StatefulWidget {
+class PrimaryAnimatedIcon extends StatefulWidget {
+  /// Название иконки
+  final String name;
+
   /// Размер
   final double size;
 
-  /// Обработчик на начало анимации
+  /// Обработчик слушатель анимации
   final FutureOr<void> Function(AnimationController controller)? listener;
 
   /// Обработчик на конец анимации
   final VoidCallback? onAnimationEnd;
 
-  /// Анимированная иконка ошибки
-  const AnimatedErrorIcon({
+  /// Основная анимированная иконка
+  const PrimaryAnimatedIcon({
+    required this.name,
     required this.size,
     this.listener,
     this.onAnimationEnd,
@@ -24,10 +27,10 @@ class AnimatedErrorIcon extends StatefulWidget {
   });
 
   @override
-  State<AnimatedErrorIcon> createState() => _AnimatedErrorIconState();
+  State<PrimaryAnimatedIcon> createState() => _PrimaryAnimatedIconState();
 }
 
-class _AnimatedErrorIconState extends State<AnimatedErrorIcon>
+class _PrimaryAnimatedIconState extends State<PrimaryAnimatedIcon>
     with SingleTickerProviderStateMixin {
   /// {@template animation_controller}
   /// Контроллер анимации
@@ -58,7 +61,7 @@ class _AnimatedErrorIconState extends State<AnimatedErrorIcon>
 
   @override
   Widget build(BuildContext context) => LottieBuilder.asset(
-        Assets.animations.error,
+        widget.name,
         controller: _animationController,
         onLoaded: (composition) {
           _animationController.duration = composition.duration;

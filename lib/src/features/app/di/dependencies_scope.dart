@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:pro_words/src/app/di/dependencies.dart';
+import 'package:pro_words/src/features/app/di/dependencies.dart';
 
 /// {@template dependencies_scope}
 /// Область видимости зависимостей приложения
 /// {@endtemplate}
 @immutable
 class DependenciesScope extends StatefulWidget {
-  /// {@template dependencies}
-  /// Зависимости приложения
-  /// {@endtemplate}
+  /// {@macro dependencies}
   final Dependencies dependencies;
 
   /// Дочерний виджет

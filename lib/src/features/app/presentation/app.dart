@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:pro_words/src/app/di/dependencies.dart';
 import 'package:pro_words/src/core/theme/theme.dart';
 import 'package:pro_words/src/core/ui_kit/ui_kit.dart';
+import 'package:pro_words/src/features/app/di/dependencies.dart';
 
 @immutable
 class App extends StatelessWidget {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pro_words/src/app/di/dependencies.dart';
 import 'package:pro_words/src/core/theme/theme.dart';
+import 'package:pro_words/src/features/app/di/dependencies.dart';
 
 extension BuildContextX on BuildContext {
   /// Media query

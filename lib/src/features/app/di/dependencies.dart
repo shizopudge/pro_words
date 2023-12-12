@@ -1,22 +1,29 @@
 import 'package:flutter/cupertino.dart';
-import 'package:pro_words/src/app/di/dependencies_scope.dart';
+import 'package:pro_words/src/core/app_connect/app_connect.dart';
 import 'package:pro_words/src/core/key_local_storage/key_local_storage.dart';
 import 'package:pro_words/src/core/router/router.dart';
 import 'package:pro_words/src/core/theme/src/app_theme.dart';
+import 'package:pro_words/src/features/app/di/dependencies_scope.dart';
 
+/// {@template dependencies}
+/// Зависимости приложения
+/// {@endtemplate}
 abstract interface class Dependencies {
   /// Возвращает зависимости приложения из [DependenciesScope]
   factory Dependencies.of(BuildContext context) =>
       DependenciesScope.of(context);
 
-  /// Локальное key-value хранилище
+  /// {@macro key_local_storage}
   abstract final IKeyLocalStorage keyLocalStorage;
 
-  /// Роутер
+  /// {@macro app_router}
   abstract final AppRouter appRouter;
 
-  /// Роутер
+  /// {@macro app_theme}
   abstract final IAppTheme appTheme;
+
+  /// {@macro app_connect}
+  abstract final IAppConnect appConnect;
 
   /// Вызывается при удалении зависимостей
   Future<void> dispose();
@@ -35,11 +42,15 @@ final class $MutableDependencies implements Dependencies {
   @override
   late IAppTheme appTheme;
 
+  @override
+  late IAppConnect appConnect;
+
   /// Возвращает иммутабельные зависимости
   Dependencies freeze() => _$ImmutableDependencies(
         keyLocalStorage: keyLocalStorage,
         appRouter: appRouter,
         appTheme: appTheme,
+        appConnect: appConnect,
       );
 
   @override
@@ -57,6 +68,7 @@ final class _$ImmutableDependencies implements Dependencies {
     required this.keyLocalStorage,
     required this.appRouter,
     required this.appTheme,
+    required this.appConnect,
   });
 
   @override
@@ -67,6 +79,9 @@ final class _$ImmutableDependencies implements Dependencies {
 
   @override
   final IAppTheme appTheme;
+
+  @override
+  final IAppConnect appConnect;
 
   @override
   Future<void> dispose() async {

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:pro_words/src/core/theme/src/app_colors.dart';
 
+/// {@template app_theme}
+/// Тема приложения
+/// {@endtemplate}
 @immutable
 abstract interface class IAppTheme {
   /// Material Dark Theme Data
@@ -27,9 +30,7 @@ abstract interface class IAppTheme {
   bool isLightTheme(ThemeData theme);
 }
 
-/// {@template app_theme}
-/// Тема приложения
-/// {@endtemplate}
+/// {@macro app_theme}
 @immutable
 class AppTheme implements IAppTheme {
   /// {@macro app_colors}
@@ -60,9 +61,6 @@ class AppTheme implements IAppTheme {
         colorSchemeSeed: colors.black,
         outlinedButtonTheme: _outlinedButtonThemeData,
         textButtonTheme: _textButtonThemeData,
-        progressIndicatorTheme: _progressIndicatorThemeData,
-        tabBarTheme: _tabBarThemeData,
-        bottomNavigationBarTheme: _bottomNavigationBarThemeData,
         iconButtonTheme: _iconButtonThemeData,
         checkboxTheme: _checkboxThemeData,
         switchTheme: _switchThemeData,
@@ -73,16 +71,13 @@ class AppTheme implements IAppTheme {
   ThemeData get lightTheme => ThemeData(
         useMaterial3: true,
         textTheme: _textTheme,
-        scaffoldBackgroundColor: colors.grey,
+        scaffoldBackgroundColor: colors.white,
         dividerTheme: _dividerThemeData,
         appBarTheme: _appBarTheme,
         elevatedButtonTheme: _elevatedButtonThemeData,
         colorSchemeSeed: colors.black,
         outlinedButtonTheme: _outlinedButtonThemeData,
         textButtonTheme: _textButtonThemeData,
-        progressIndicatorTheme: _progressIndicatorThemeData,
-        tabBarTheme: _tabBarThemeData,
-        bottomNavigationBarTheme: _bottomNavigationBarThemeData,
         iconButtonTheme: _iconButtonThemeData,
         checkboxTheme: _checkboxThemeData,
         switchTheme: _switchThemeData,
@@ -238,7 +233,7 @@ class AppTheme implements IAppTheme {
   ElevatedButtonThemeData get _elevatedButtonThemeData =>
       ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          textStyle: _textTheme.titleMedium,
+          textStyle: _textTheme.titleSmall,
           backgroundColor: colors.black,
           foregroundColor: colors.white,
           minimumSize: const Size.fromHeight(64),
@@ -294,45 +289,6 @@ class AppTheme implements IAppTheme {
         ).copyWith(elevation: ButtonStyleButton.allOrNull(0)),
       );
 
-  /// Tab bar style
-  TabBarTheme get _tabBarThemeData => TabBarTheme(
-        indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(100),
-          color: colors.white,
-          border: Border.all(
-            color: colors.black,
-          ),
-        ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        dividerColor: Colors.transparent,
-        labelColor: colors.black,
-        labelPadding: EdgeInsets.zero,
-        labelStyle: _textTheme.bodyMedium,
-        unselectedLabelColor: colors.grey,
-        unselectedLabelStyle: _textTheme.bodyMedium,
-        overlayColor: const MaterialStatePropertyAll(Colors.transparent),
-      );
-
-  /// Bottom navigation bar style
-  BottomNavigationBarThemeData get _bottomNavigationBarThemeData =>
-      BottomNavigationBarThemeData(
-        elevation: 0,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: colors.white,
-        selectedIconTheme: IconThemeData(
-          color: colors.black,
-        ),
-        unselectedIconTheme: IconThemeData(
-          color: colors.grey,
-        ),
-        selectedLabelStyle: _textTheme.labelSmall?.copyWith(
-          color: colors.black,
-        ),
-        unselectedLabelStyle: _textTheme.labelSmall?.copyWith(
-          color: colors.grey,
-        ),
-      );
-
   /// Checkbox style
   CheckboxThemeData get _checkboxThemeData => CheckboxThemeData(
         fillColor: MaterialStateProperty.resolveWith(
@@ -368,10 +324,6 @@ class AppTheme implements IAppTheme {
         trackOutlineWidth: MaterialStateProperty.all(0),
         splashRadius: 0,
       );
-
-  /// Progress indicator style
-  ProgressIndicatorThemeData get _progressIndicatorThemeData =>
-      ProgressIndicatorThemeData(color: colors.black);
 
   /// Divider style
   DividerThemeData get _dividerThemeData => DividerThemeData(

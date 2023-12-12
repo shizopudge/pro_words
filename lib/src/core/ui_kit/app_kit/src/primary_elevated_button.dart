@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 /// {@template primary_elevated_button}
@@ -44,7 +46,7 @@ class _PrimaryElevatedButtonState extends State<PrimaryElevatedButton>
       value: 1.0,
       lowerBound: 0.95,
       upperBound: 1.0,
-      duration: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 75),
       vsync: this,
     );
   }
@@ -63,7 +65,7 @@ class _PrimaryElevatedButtonState extends State<PrimaryElevatedButton>
       builder: (context, _) => ScaleTransition(
         scale: _scaleAnimationController.view,
         child: ElevatedButton(
-          onPressed: widget.onTap,
+          onPressed: _getOnTap,
           style: widget.style,
           child: widget.child,
         ),
@@ -88,6 +90,17 @@ class _PrimaryElevatedButtonState extends State<PrimaryElevatedButton>
       padding: padding,
       child: button,
     );
+  }
+
+  /// Возвращает обработчик нажатия если он был передан, иначе null
+  VoidCallback? get _getOnTap => widget.onTap != null ? _onTap : null;
+
+  /// Обработчик нажатия
+  void _onTap() {
+    widget.onTap?.call();
+    _scaleAnimationController.reverse().whenComplete(
+          () => _scaleAnimationController.forward(),
+        );
   }
 
   /// Обработчик на зажатие кнопки

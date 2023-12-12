@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+/// {@template app_colors}
+/// Цвета приложения
+/// {@endtemplate}
 @immutable
 abstract interface class IAppColors {
   /// White
@@ -18,17 +21,9 @@ abstract interface class IAppColors {
   Color get grey;
 }
 
-/// {@template app_colors}
-/// Цвета приложения
-/// {@endtemplate}
+/// {@macro app_colors}
 @immutable
 class AppColors implements IAppColors {
-  /// {@macro app_colors}
-  const AppColors._();
-
-  /// Вовзращает экземпляр класса [IAppColors]
-  static IAppColors get instance => const AppColors._();
-
   @override
   Color get white => Colors.white;
 

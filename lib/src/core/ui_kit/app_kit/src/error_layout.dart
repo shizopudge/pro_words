@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pro_words/src/core/extensions/extensions.dart';
+import 'package:pro_words/src/core/resources/resources.dart';
 import 'package:pro_words/src/core/ui_kit/app_kit/app_kit.dart';
 import 'package:pro_words/src/core/ui_kit/utils_kit/src/animated_fade_slide_transition.dart';
 
@@ -7,6 +8,9 @@ import 'package:pro_words/src/core/ui_kit/utils_kit/src/animated_fade_slide_tran
 class ErrorLayout extends StatefulWidget {
   /// Сообщение
   final String message;
+
+  /// Заголовок
+  final String title;
 
   /// Текст кнопки
   final String buttonText;
@@ -17,6 +21,7 @@ class ErrorLayout extends StatefulWidget {
   /// Виджет отображающий ошибку инициализации приложения
   const ErrorLayout({
     required this.message,
+    this.title = 'Error',
     this.buttonText = 'Обновить',
     this.onTap,
     super.key,
@@ -32,15 +37,31 @@ class _ErrorLayoutState extends State<ErrorLayout> {
   /// {@endtemplate}
   late final ValueNotifier<bool> _errorIconAppearanceController;
 
+  /// {@template scroll_controller}
+  /// Контроллер прокрутки
+  /// {@endtemplate}
+  late final ScrollController _scrollController;
+
+  /// {@template divider_visibility_controller}
+  /// Контроллер видимости разделителя
+  /// {@endtemplate}
+  late final ValueNotifier<bool> _dividerVisibilityController;
+
   @override
   void initState() {
     super.initState();
     _errorIconAppearanceController = ValueNotifier<bool>(false);
+    _dividerVisibilityController = ValueNotifier<bool>(false);
+    _scrollController = ScrollController()..addListener(_scrollListener);
   }
 
   @override
   void dispose() {
     _errorIconAppearanceController.dispose();
+    _dividerVisibilityController.dispose();
+    _scrollController
+      ..removeListener(_scrollListener)
+      ..dispose();
     super.dispose();
   }
 
@@ -58,7 +79,8 @@ class _ErrorLayoutState extends State<ErrorLayout> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      AnimatedErrorIcon(
+                      PrimaryAnimatedIcon(
+                        name: Assets.animations.error,
                         size: 120,
                         listener: _animationListener,
                       ),
@@ -68,15 +90,25 @@ class _ErrorLayoutState extends State<ErrorLayout> {
                           isVisible: _isErrorIconAppeared,
                           duration: const Duration(milliseconds: 550),
                           child: Padding(
-                            padding: const EdgeInsets.only(top: 8),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Text(
-                              'Error',
+                              widget.title,
+                              maxLines: 5,
+                              overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.center,
                               style: context.theme.textTheme.headlineLarge
-                                  ?.copyWith(
-                                color: context.colors.grey,
-                              ),
+                                  ?.copyWith(color: context.colors.red),
                             ),
+                          ),
+                        ),
+                      ),
+                      AnimatedBuilder(
+                        animation: _dividerVisibilityController,
+                        builder: (context, _) => AnimatedOpacity(
+                          opacity: _dividerVisibilityController.value ? 1 : 0,
+                          duration: const Duration(milliseconds: 150),
+                          child: Divider(
+                            color: context.colors.red.withOpacity(.25),
                           ),
                         ),
                       ),
@@ -89,8 +121,9 @@ class _ErrorLayoutState extends State<ErrorLayout> {
                         isVisible: _isErrorIconAppeared,
                         duration: const Duration(milliseconds: 550),
                         child: SingleChildScrollView(
+                          controller: _scrollController,
                           padding: const EdgeInsets.only(
-                            top: 20,
+                            top: 12,
                             left: 40,
                             right: 40,
                           ),
@@ -114,13 +147,20 @@ class _ErrorLayoutState extends State<ErrorLayout> {
             onTap: widget.onTap,
             text: widget.buttonText,
             errorIconAppearanceController: _errorIconAppearanceController,
-          )
+          ),
         ],
       );
 
   /// Слушатель анимации
-  void _animationListener(AnimationController controller) {
-    if (controller.value > 0.2) _errorIconAppearanceController.value = true;
+  void _animationListener(AnimationController controller) =>
+    _errorIconAppearanceController.value = controller.value > 0.2;
+
+
+  /// Слушатель прокрутки
+  void _scrollListener() {
+    if (!_scrollController.hasClients) return;
+
+    _dividerVisibilityController.value = _scrollController.offset > 0.0;
   }
 
   /// Вовзращает true, если иконка ошибки появилась
@@ -152,7 +192,11 @@ class _BottomButton extends AnimatedWidget {
         child: PrimaryElevatedButton(
           onTap: onTap,
           padding: const EdgeInsets.all(20),
-          child: Text(text),
+          child: Text(
+            text,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
         ),
       );
 }
