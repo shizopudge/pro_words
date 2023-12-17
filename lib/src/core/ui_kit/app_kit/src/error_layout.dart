@@ -1,9 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:pro_words/src/core/extensions/extensions.dart';
 import 'package:pro_words/src/core/resources/resources.dart';
 import 'package:pro_words/src/core/ui_kit/app_kit/app_kit.dart';
 import 'package:pro_words/src/core/ui_kit/utils_kit/src/animated_fade_slide_transition.dart';
 
+/// {@template error_layout}
+/// Виджет отображающий ошибку инициализации приложения
+/// {@endtemplate}
 @immutable
 class ErrorLayout extends StatefulWidget {
   /// Сообщение
@@ -18,10 +21,10 @@ class ErrorLayout extends StatefulWidget {
   /// Обработчик нажатия на кнопку
   final VoidCallback? onTap;
 
-  /// Виджет отображающий ошибку инициализации приложения
+  /// {@macro error_layout}
   const ErrorLayout({
     required this.message,
-    this.title = 'Error',
+    this.title = 'Ошибка',
     this.buttonText = 'Обновить',
     this.onTap,
     super.key,
@@ -32,36 +35,27 @@ class ErrorLayout extends StatefulWidget {
 }
 
 class _ErrorLayoutState extends State<ErrorLayout> {
-  /// {@template error_icon_appearance_controller}
+  /// {@template message_and_refresh_button_visibility_controller}
   /// Контроллер появления иконки ошибки
   /// {@endtemplate}
-  late final ValueNotifier<bool> _errorIconAppearanceController;
+  late final ValueNotifier<bool> _messageAndRefreshButtonVisibilityController;
 
-  /// {@template scroll_controller}
-  /// Контроллер прокрутки
+  /// {@template more_button_visibility_controller}
+  /// Контроллер видимости кнопки "Подробнее"
   /// {@endtemplate}
-  late final ScrollController _scrollController;
-
-  /// {@template divider_visibility_controller}
-  /// Контроллер видимости разделителя
-  /// {@endtemplate}
-  late final ValueNotifier<bool> _dividerVisibilityController;
+  late final ValueNotifier<bool> _moreButtonVisibilityController;
 
   @override
   void initState() {
     super.initState();
-    _errorIconAppearanceController = ValueNotifier<bool>(false);
-    _dividerVisibilityController = ValueNotifier<bool>(false);
-    _scrollController = ScrollController()..addListener(_scrollListener);
+    _messageAndRefreshButtonVisibilityController = ValueNotifier<bool>(false);
+    _moreButtonVisibilityController = ValueNotifier<bool>(false);
   }
 
   @override
   void dispose() {
-    _errorIconAppearanceController.dispose();
-    _dividerVisibilityController.dispose();
-    _scrollController
-      ..removeListener(_scrollListener)
-      ..dispose();
+    _messageAndRefreshButtonVisibilityController.dispose();
+    _moreButtonVisibilityController.dispose();
     super.dispose();
   }
 
@@ -75,66 +69,65 @@ class _ErrorLayoutState extends State<ErrorLayout> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      PrimaryAnimatedIcon(
-                        name: Assets.animations.error,
-                        size: 120,
-                        listener: _animationListener,
-                      ),
-                      AnimatedBuilder(
-                        animation: _errorIconAppearanceController,
-                        builder: (context, _) => AnimatedFadeSlideTransition(
-                          isVisible: _isErrorIconAppeared,
-                          duration: const Duration(milliseconds: 550),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Text(
+                  PrimaryAnimatedIcon(
+                    name: Assets.animations.error,
+                    size: 120,
+                    listener: _animationListener,
+                  ),
+                  AnimatedBuilder(
+                    animation: _messageAndRefreshButtonVisibilityController,
+                    builder: (context, _) => PrimaryAnimatedSwitcher(
+                      showFirst: _showMessageAndRefreshButton,
+                      firstChild: Padding(
+                        padding: const EdgeInsets.only(
+                          top: 8,
+                          left: 40,
+                          right: 40,
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
                               widget.title,
-                              maxLines: 5,
+                              maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.center,
                               style: context.theme.textTheme.headlineLarge
                                   ?.copyWith(color: context.colors.red),
                             ),
-                          ),
-                        ),
-                      ),
-                      AnimatedBuilder(
-                        animation: _dividerVisibilityController,
-                        builder: (context, _) => AnimatedOpacity(
-                          opacity: _dividerVisibilityController.value ? 1 : 0,
-                          duration: const Duration(milliseconds: 150),
-                          child: Divider(
-                            color: context.colors.red.withOpacity(.25),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Flexible(
-                    child: AnimatedBuilder(
-                      animation: _errorIconAppearanceController,
-                      builder: (context, _) => AnimatedFadeSlideTransition(
-                        isVisible: _isErrorIconAppeared,
-                        duration: const Duration(milliseconds: 550),
-                        child: SingleChildScrollView(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.only(
-                            top: 12,
-                            left: 40,
-                            right: 40,
-                          ),
-                          child: Text(
-                            widget.message,
-                            textAlign: TextAlign.center,
-                            style:
-                                context.theme.textTheme.titleMedium?.copyWith(
-                              color: context.colors.grey,
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: DidExceedMaxLinesText(
+                                widget.message,
+                                maxLines: 5,
+                                textAlign: TextAlign.center,
+                                style: context.theme.textTheme.titleMedium
+                                    ?.copyWith(
+                                  color: context.colors.grey,
+                                ),
+                                onExceedMaxLines: _onExceedMaxLines,
+                              ),
                             ),
-                          ),
+                            AnimatedBuilder(
+                              animation: _moreButtonVisibilityController,
+                              builder: (context, child) =>
+                                  PrimaryAnimatedSwitcher(
+                                showFirst: _showMoreButton,
+                                firstChild: CupertinoButton(
+                                  onPressed: _openDetailErrorSheet,
+                                  padding: const EdgeInsets.only(
+                                    top: 8,
+                                    left: 24,
+                                    right: 24,
+                                  ),
+                                  child: Text(
+                                    'Подробнее',
+                                    style: context.theme.textTheme.titleSmall
+                                        ?.copyWith(color: context.colors.black),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -146,25 +139,38 @@ class _ErrorLayoutState extends State<ErrorLayout> {
           _BottomButton(
             onTap: widget.onTap,
             text: widget.buttonText,
-            errorIconAppearanceController: _errorIconAppearanceController,
+            errorIconAppearanceController:
+                _messageAndRefreshButtonVisibilityController,
           ),
         ],
       );
 
   /// Слушатель анимации
-  void _animationListener(AnimationController controller) =>
-    _errorIconAppearanceController.value = controller.value > 0.2;
-
-
-  /// Слушатель прокрутки
-  void _scrollListener() {
-    if (!_scrollController.hasClients) return;
-
-    _dividerVisibilityController.value = _scrollController.offset > 0.0;
+  void _animationListener(AnimationController controller) {
+    if (_messageAndRefreshButtonVisibilityController.value) return;
+    _messageAndRefreshButtonVisibilityController.value =
+        controller.value >= 0.4;
   }
 
-  /// Вовзращает true, если иконка ошибки появилась
-  bool get _isErrorIconAppeared => _errorIconAppearanceController.value;
+  /// Обработчик на превышение текстом доступного места
+  void _onExceedMaxLines() {
+    if (_moreButtonVisibilityController.value) return;
+    _moreButtonVisibilityController.value = true;
+  }
+
+  /// Открывает шит с подробной информацией об ошибке
+  Future<void> _openDetailErrorSheet() => ErrorDetailSheet.show(
+        context,
+        title: widget.title,
+        message: widget.message,
+      );
+
+  /// Возвращает значение контроллера [_messageAndRefreshButtonVisibilityController]
+  bool get _showMessageAndRefreshButton =>
+      _messageAndRefreshButtonVisibilityController.value;
+
+  /// Возвращает значение контроллера [_moreButtonVisibilityController]
+  bool get _showMoreButton => _moreButtonVisibilityController.value;
 }
 
 @immutable
@@ -183,12 +189,13 @@ class _BottomButton extends AnimatedWidget {
     required this.onTap,
     required this.errorIconAppearanceController,
     required this.text,
+    super.key,
   }) : super(listenable: errorIconAppearanceController);
 
   @override
   Widget build(BuildContext context) => AnimatedFadeSlideTransition(
         isVisible: errorIconAppearanceController.value,
-        duration: const Duration(milliseconds: 650),
+        duration: const Duration(milliseconds: 300),
         child: PrimaryElevatedButton(
           onTap: onTap,
           padding: const EdgeInsets.all(20),

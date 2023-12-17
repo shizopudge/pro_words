@@ -18,10 +18,8 @@ class AppInitializationErrorPage extends StatefulWidget {
 
 class _AppInitializationErrorPageState
     extends State<AppInitializationErrorPage> {
-  /// {@template error_icon_appearance_controller}
-  /// Контроллер появления иконки ошибки
-  /// {@endtemplate}
-  late final ValueNotifier<bool> _errorIconAppearanceController;
+  /// {@macro message_and_refresh_button_visibility_controller}
+  late final ValueNotifier<bool> _messageAndRefreshButtonVisibilityController;
 
   /// {@macro app_colors}
   late final IAppColors colors;
@@ -32,14 +30,14 @@ class _AppInitializationErrorPageState
   @override
   void initState() {
     super.initState();
-    _errorIconAppearanceController = ValueNotifier<bool>(false);
+    _messageAndRefreshButtonVisibilityController = ValueNotifier<bool>(false);
     colors = AppColors();
     appTheme = AppTheme(appColors: colors);
   }
 
   @override
   void dispose() {
-    _errorIconAppearanceController.dispose();
+    _messageAndRefreshButtonVisibilityController.dispose();
     super.dispose();
   }
 
@@ -61,20 +59,18 @@ class _AppInitializationErrorPageState
                       size: 150,
                       listener: _animationListener,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        top: 24,
-                        left: 40,
-                        right: 40,
-                      ),
-                      child: AnimatedBuilder(
-                        animation: _errorIconAppearanceController,
-                        builder: (context, _) => AnimatedFadeSlideTransition(
-                          isVisible: _isErrorIconAppeared,
-                          duration: const Duration(milliseconds: 550),
+                    AnimatedBuilder(
+                      animation: _messageAndRefreshButtonVisibilityController,
+                      builder: (context, _) => PrimaryAnimatedSwitcher(
+                        showFirst: _showMessageAndRefreshButton,
+                        firstChild: Padding(
+                          padding: const EdgeInsets.only(
+                            top: 24,
+                            left: 40,
+                            right: 40,
+                          ),
                           child: Text(
-                            'Oops, looks like we were unable to initialize the application...'
-                            '\nTry restarting the application.',
+                            'К сожалению нам не удалось инициализировать приложение...',
                             textAlign: TextAlign.center,
                             style: appTheme.lightTheme.textTheme.titleMedium
                                 ?.copyWith(color: colors.grey),
@@ -88,7 +84,8 @@ class _AppInitializationErrorPageState
             ),
             bottomNavigationBar: _BottomButton(
               onTap: _reinitializeApp,
-              errorIconAppearanceController: _errorIconAppearanceController,
+              errorIconAppearanceController:
+                  _messageAndRefreshButtonVisibilityController,
             ),
           ),
         ),
@@ -96,13 +93,14 @@ class _AppInitializationErrorPageState
 
   /// Слушатель анимации
   void _animationListener(AnimationController controller) {
-    if (_errorIconAppearanceController.value) return;
-
-    _errorIconAppearanceController.value = controller.value >= 0.4;
+    if (_messageAndRefreshButtonVisibilityController.value) return;
+    _messageAndRefreshButtonVisibilityController.value =
+        controller.value >= 0.4;
   }
 
-  /// Вовзращает true, если иконка ошибки появилась
-  bool get _isErrorIconAppeared => _errorIconAppearanceController.value;
+  /// Возвращает значение контроллера [_messageAndRefreshButtonVisibilityController]
+  bool get _showMessageAndRefreshButton =>
+      _messageAndRefreshButtonVisibilityController.value;
 
   /// Перезагружает приложение
   Future<void> _reinitializeApp() => Future<void>.value();
@@ -113,13 +111,14 @@ class _BottomButton extends AnimatedWidget {
   /// Обработчик нажатия
   final VoidCallback onTap;
 
-  /// {@macro error_icon_appearance_controller}
+  /// {@macro message_and_refresh_button_visibility_controller}
   final ValueNotifier<bool> errorIconAppearanceController;
 
   /// Нижняя кнопка
   const _BottomButton({
     required this.onTap,
     required this.errorIconAppearanceController,
+    super.key,
   }) : super(listenable: errorIconAppearanceController);
 
   @override
@@ -129,7 +128,7 @@ class _BottomButton extends AnimatedWidget {
         right: false,
         child: AnimatedFadeSlideTransition(
           isVisible: errorIconAppearanceController.value,
-          duration: const Duration(milliseconds: 650),
+          duration: const Duration(milliseconds: 300),
           child: PrimaryElevatedButton(
             onTap: onTap,
             padding: const EdgeInsets.all(20),

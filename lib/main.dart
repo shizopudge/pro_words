@@ -8,6 +8,7 @@ import 'package:pro_words/src/features/app/initialization/initialization.dart';
 import 'package:pro_words/src/features/app/presentation/app.dart';
 import 'package:pro_words/src/features/app/presentation/app_initialization_error_page.dart';
 import 'package:pro_words/src/features/app/presentation/app_initialization_splash_page.dart';
+import 'package:pro_words/src/features/app_connect/presentation/app_connect_listener.dart';
 import 'package:pro_words/src/features/toaster/toaster_scope.dart';
 
 /// Главная функция запускающая приложение
@@ -31,7 +32,9 @@ void main() => runZonedGuarded<void>(
               dependencies: dependencies,
               child: const ThemeScope(
                 child: ToasterScope(
-                  child: App(),
+                  child: AppConnectListener(
+                    child: App(),
+                  ),
                 ),
               ),
             ),

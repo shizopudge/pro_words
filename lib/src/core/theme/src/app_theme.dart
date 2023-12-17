@@ -24,10 +24,10 @@ abstract interface class IAppTheme {
   String get lightThemeKey;
 
   /// Возвращает true, если тема темная
-  bool isDarkTheme(ThemeData theme);
+  bool isDark(String themeKey);
 
   /// Возвращает true, если тема светлая
-  bool isLightTheme(ThemeData theme);
+  bool isLight(String themeKey);
 }
 
 /// {@macro app_theme}
@@ -65,6 +65,7 @@ class AppTheme implements IAppTheme {
         checkboxTheme: _checkboxThemeData,
         switchTheme: _switchThemeData,
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        bottomSheetTheme: _bottomSheetThemeData,
       );
 
   @override
@@ -82,13 +83,14 @@ class AppTheme implements IAppTheme {
         checkboxTheme: _checkboxThemeData,
         switchTheme: _switchThemeData,
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        bottomSheetTheme: _bottomSheetThemeData,
       );
 
   @override
-  bool isDarkTheme(ThemeData theme) => theme == darkTheme;
+  bool isDark(String themeKey) => themeKey == darkThemeKey;
 
   @override
-  bool isLightTheme(ThemeData theme) => theme == lightTheme;
+  bool isLight(String themeKey) => themeKey == lightThemeKey;
 
   /// AppBar Theme
   AppBarTheme get _appBarTheme => AppBarTheme(
@@ -226,6 +228,15 @@ class AppTheme implements IAppTheme {
           height: 1.3,
           textBaseline: TextBaseline.alphabetic,
           leadingDistribution: TextLeadingDistribution.even,
+        ),
+      );
+
+  /// Тема нижненго всплывающего окна
+  BottomSheetThemeData get _bottomSheetThemeData => BottomSheetThemeData(
+        backgroundColor: colors.white,
+        dragHandleColor: colors.grey,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         ),
       );
 

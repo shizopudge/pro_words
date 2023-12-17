@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:pro_words/src/features/toaster/toaster.dart';
 import 'package:pro_words/src/features/toaster/toaster_config.dart';
 
+/// {@template toaster_scope}
+/// Область видимости тостера
+/// {@endtemplate}
 @immutable
 class ToasterScope extends StatefulWidget {
   /// Дочерний виджет
   final Widget child;
 
-  /// Область видимости тостера
+  /// {@macro toaster_scope}
   const ToasterScope({
     required this.child,
     super.key,
@@ -18,14 +21,10 @@ class ToasterScope extends StatefulWidget {
 
   /// Возвращает стейт области видимости тостера, если BuildContext
   /// содержит ToasterScope, иначе выкидывает ошибку [FlutterError]
-  static ToasterScopeState of(BuildContext context, {bool listen = true}) {
+  static ToasterScopeState of(BuildContext context) {
     _InheritedToaster? scope;
 
-    if (listen) {
-      scope = context.dependOnInheritedWidgetOfExactType<_InheritedToaster>();
-    } else {
-      scope = context.getInheritedWidgetOfExactType<_InheritedToaster>();
-    }
+    scope = context.getInheritedWidgetOfExactType<_InheritedToaster>();
 
     if (scope == null) {
       throw FlutterError(
@@ -45,21 +44,34 @@ class ToasterScopeState extends State<ToasterScope> {
   /// Очередь тостов
   late final Queue<ToasterController> _queue;
 
-  /// Последний контроллер
+  /// {@macro toaster_state}
+  late ToasterState _state;
+
+  /// {@macro toaster_controller}
   ToasterController? _currentController;
 
+  /// {template stored_config}
+  /// Сохраненный конфиг тостера
+  /// {@endtemplate}
+  ToasterConfig? _storedConfig;
+
+  /// {@template overlay}
   /// Оверлей
+  /// {@endtemplate}
   OverlayState? _overlay;
 
   @override
   void initState() {
     super.initState();
     _queue = Queue<ToasterController>();
+    _state = ToasterState.idle;
   }
 
   @override
   void dispose() {
-    _currentController = null;
+    _currentController?.entry
+      ?..remove()
+      ..dispose();
     _overlay?.dispose();
     super.dispose();
   }
@@ -75,21 +87,51 @@ class ToasterScopeState extends State<ToasterScope> {
     BuildContext context, {
     required ToasterConfig config,
   }) {
-    _overlay = Overlay.of(context);
-    final entry = OverlayEntry(
-      builder: (context) => Toaster(
-        config: config,
-        listener: _listener,
-      ),
-    );
-    _queue.addLast(ToasterController(config: config, entry: entry));
-    _updateToast();
+    _overlay ??= Overlay.of(context);
+    final entry = _createEntry(config);
+    final controller = ToasterController(config: config, entry: entry);
+    if (config.isHighPriority) {
+      if (!_isCanBeAddedToQueueForHighPriority(controller)) return;
+      _queue.addFirst(controller);
+      _storeToasterConfig();
+      _hideCurrentToast();
+      _updateToast();
+      _restoreToasterController();
+    } else {
+      if (_isCanBeAddedToQueue(controller)) _queue.addLast(controller);
+      if (_state != ToasterState.showed) _updateToast();
+    }
   }
 
   /// Очистить очередь тостов
   void clearToasts() {
     _queue.clear();
     _hideCurrentToast();
+  }
+
+  /// Восстанавливает контроллер тостера и помещает его в начало очереди
+  void _restoreToasterController() {
+    final config = _storedConfig;
+    if (config != null) {
+      final entry = _createEntry(config);
+      final restoredController =
+          ToasterController.restored(config: config, entry: entry);
+      _queue.addFirst(restoredController);
+    }
+  }
+
+  /// Создает [OverlayEntry]
+  OverlayEntry _createEntry(ToasterConfig config) => OverlayEntry(
+        builder: (context) => Toaster(
+          config: config,
+          onDismiss: _onDismiss,
+        ),
+      );
+
+  /// Сохраняет текущую конфигурацию контроллера, если [_state] == [ToasterState.showed]
+  void _storeToasterConfig() {
+    if (_state != ToasterState.showed) return;
+    _storedConfig = _currentController?.config;
   }
 
   /// Обновление тоста
@@ -100,18 +142,40 @@ class ToasterScopeState extends State<ToasterScope> {
     if (_currentController != null) _hideCurrentToast();
     _overlay?.insert(controller.entry);
     _currentController = controller;
+    _state = ToasterState.showed;
   }
 
-  /// Очистить очередь тостов
+  /// Исчезновение текущего тоста
   void _hideCurrentToast() {
     _currentController?.entry.remove();
     _currentController?.entry.dispose();
+    if (_currentController?.isRestored ?? false) _storedConfig = null;
     _currentController = null;
+    _state = ToasterState.idle;
   }
 
+  /// Возвращает true, если тостер может быть добавлен в очередь
+  ///
+  /// ## Условия
+  ///
+  /// 1. В очереди нет контроллеров равынх передавемому
+  /// 2. Длина очереди не больше 3
+  /// 3. Текущий контроллер не равен передаваемеому
+  bool _isCanBeAddedToQueue(ToasterController controller) =>
+      _queue.where((element) => element == controller).isEmpty &&
+      _queue.length <= 3 &&
+      _currentController != controller;
+
+  /// Возвращает true, если в очереди нет контроллеров равынх передавемому и
+  /// текущий контроллер не равен передаваемому
+  bool _isCanBeAddedToQueueForHighPriority(ToasterController controller) =>
+      _queue.where((element) => element == controller).isEmpty &&
+      _currentController != controller;
+
   /// Слушатель статуса анимации тостера
-  void _listener(AnimationStatus status) {
-    if (status == AnimationStatus.dismissed) _hideCurrentToast();
+  void _onDismiss() {
+    _hideCurrentToast();
+    _updateToast();
   }
 }
 
@@ -130,8 +194,7 @@ class _InheritedToaster extends InheritedWidget {
   });
 
   @override
-  bool updateShouldNotify(_InheritedToaster oldWidget) =>
-      state != oldWidget.state;
+  bool updateShouldNotify(_InheritedToaster oldWidget) => false;
 }
 
 /// {@template toaster_controller}
@@ -145,12 +208,32 @@ class ToasterController extends Equatable {
   /// Текущее наложение
   final OverlayEntry entry;
 
+  /// Если true, значит контроллер был восстановлен
+  final bool isRestored;
+
   /// {@macro toaster_controller}
   const ToasterController({
     required this.config,
     required this.entry,
-  });
+  }) : isRestored = false;
+
+  /// Конструктор восстановленного контроллера
+  const ToasterController.restored({
+    required this.config,
+    required this.entry,
+  }) : isRestored = true;
 
   @override
   List<Object?> get props => [config];
+}
+
+/// {@template toaster_state}
+/// Состояние тостера
+/// {@endtemplate}
+enum ToasterState {
+  /// Ожидание
+  idle,
+
+  /// Отображение
+  showed;
 }

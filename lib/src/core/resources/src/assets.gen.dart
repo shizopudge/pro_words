@@ -17,11 +17,14 @@ class $AssetsAnimationsGen {
   /// File path: assets/animations/error.json
   String get error => 'assets/animations/error.json';
 
+  /// File path: assets/animations/internet.json
+  String get internet => 'assets/animations/internet.json';
+
   /// File path: assets/animations/loading.json
   String get loading => 'assets/animations/loading.json';
 
   /// List of all assets
-  List<String> get values => [error, loading];
+  List<String> get values => [error, internet, loading];
 }
 
 class $AssetsFontsGen {

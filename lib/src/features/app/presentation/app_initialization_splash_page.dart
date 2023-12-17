@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:pro_words/src/core/theme/theme.dart';
 import 'package:pro_words/src/core/ui_kit/app_kit/app_kit.dart';
 
+/// {@template app_initialization_splash_page}
+/// Экран отображающийся во время инициализации приложения
+/// {@endtemplate}
 @immutable
 class AppInitializationSplashPage extends StatefulWidget {
   /// {@template initialization_progress_controller}
@@ -10,7 +13,7 @@ class AppInitializationSplashPage extends StatefulWidget {
   final ValueNotifier<({int progress, String message})>
       initializationProgressController;
 
-  /// Экран отображающийся во время инициализации приложения
+  /// {@macro app_initialization_splash_page}
   const AppInitializationSplashPage({
     required this.initializationProgressController,
     super.key,

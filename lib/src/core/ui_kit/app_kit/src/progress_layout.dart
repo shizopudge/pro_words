@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:pro_words/src/core/ui_kit/ui_kit.dart';
 
+/// {@template primary_loading_indicator}
+/// Виджет отображающий загрузку
+/// {@endtemplate}
 @immutable
 class ProgressLayout extends StatelessWidget {
-  /// Виджет отображающий загрузку
+  /// {@macro primary_loading_indicator}
   const ProgressLayout({
     super.key,
   });

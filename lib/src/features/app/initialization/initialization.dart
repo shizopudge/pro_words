@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pro_words/src/core/app_connect/app_connect.dart';
 import 'package:pro_words/src/core/bloc_observer/bloc_observer.dart';
 import 'package:pro_words/src/core/key_local_storage/key_local_storage.dart';
 import 'package:pro_words/src/core/logger/logger.dart';
@@ -12,6 +11,7 @@ import 'package:pro_words/src/core/router/router.dart';
 import 'package:pro_words/src/core/theme/src/app_colors.dart';
 import 'package:pro_words/src/core/theme/src/app_theme.dart';
 import 'package:pro_words/src/features/app/di/dependencies.dart';
+import 'package:pro_words/src/features/app_connect/data/app_connect.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Ephemerally initializes the app and prepares it for use.
@@ -138,8 +138,7 @@ final Map<String, _InitializationStep> _initializationSteps =
       rethrow;
     }
   },
-  'Initializing AppRouter': (dependencies) =>
-      dependencies.appRouter = AppRouter(),
+  'Initializing AppRouter': (dependencies) => dependencies.router = AppRouter(),
   'Initializing AppTheme': (dependencies) =>
       dependencies.appTheme = AppTheme(appColors: AppColors()),
   'Initializing BLoC observer': (dependencies) =>

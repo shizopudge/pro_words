@@ -15,28 +15,12 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
         body: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: ErrorLayout(
-                  onTap: () =>
-                      ToasterScope.of(context, listen: false).showToast(
-                    context,
-                    config: const ToasterConfig(message: 'Сообщение'),
-                  ),
-                  message: 'Error on home page',
-                  // error: FlutterError('Flutter error'),
-                  // stackTrace: StackTrace.current,
-                ),
-              ),
-              PrimaryElevatedButton(
-                onTap: () => ToasterScope.of(context, listen: false).showToast(
-                  context,
-                  config: const ToasterConfig(message: 'Работа'),
-                ),
-                child: Text('Работа'),
-              ),
-            ],
+          child: ErrorLayout(
+            onTap: () => ToasterScope.of(context).showToast(
+              context,
+              config: const ToasterConfig(message: 'Сообщение'),
+            ),
+            message: 'Error on home page',
           ),
         ),
       );

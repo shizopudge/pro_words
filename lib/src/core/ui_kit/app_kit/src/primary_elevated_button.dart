@@ -1,6 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:pro_words/src/core/extensions/extensions.dart';
+import 'package:pro_words/src/core/ui_kit/ui_kit.dart';
 
 /// {@template primary_elevated_button}
 /// Основная elevated кнопка приложения
@@ -19,12 +19,16 @@ class PrimaryElevatedButton extends StatefulWidget {
   /// Отступы кнопки
   final EdgeInsets? padding;
 
+  /// Если true, то вместо [child] отображается индикатор загрузки
+  final bool isLoading;
+
   /// {@macro primary_elevated_button}
   const PrimaryElevatedButton({
     required this.onTap,
     required this.child,
     this.style,
     this.padding,
+    this.isLoading = false,
     super.key,
   });
 
@@ -46,7 +50,7 @@ class _PrimaryElevatedButtonState extends State<PrimaryElevatedButton>
       value: 1.0,
       lowerBound: 0.95,
       upperBound: 1.0,
-      duration: const Duration(milliseconds: 75),
+      duration: const Duration(milliseconds: 150),
       vsync: this,
     );
   }
@@ -59,7 +63,6 @@ class _PrimaryElevatedButtonState extends State<PrimaryElevatedButton>
 
   @override
   Widget build(BuildContext context) {
-    // Кнопка
     Widget button = AnimatedBuilder(
       animation: _scaleAnimationController,
       builder: (context, _) => ScaleTransition(
@@ -67,16 +70,20 @@ class _PrimaryElevatedButtonState extends State<PrimaryElevatedButton>
         child: ElevatedButton(
           onPressed: _getOnTap,
           style: widget.style,
-          child: widget.child,
+          child: PrimaryAnimatedSwitcher(
+            showFirst: !widget.isLoading,
+            firstChild: widget.child,
+            secondChild: PrimaryLoadingIndicator(color: context.colors.white),
+          ),
         ),
       ),
     );
 
     if (widget.onTap != null) {
       button = GestureDetector(
-        onTapDown: (_) => _scaleDown(),
-        onTapUp: (_) => _returnToDefault(),
-        onTapCancel: _returnToDefault,
+        onTapDown: (_) => _scaleAnimationController.reverse(),
+        onTapUp: (_) => _scaleAnimationController.forward(),
+        onTapCancel: _scaleAnimationController.forward,
         behavior: HitTestBehavior.opaque,
         child: button,
       );
@@ -98,14 +105,7 @@ class _PrimaryElevatedButtonState extends State<PrimaryElevatedButton>
   /// Обработчик нажатия
   void _onTap() {
     widget.onTap?.call();
-    _scaleAnimationController.reverse().whenComplete(
-          () => _scaleAnimationController.forward(),
-        );
+    final TickerFuture ticker = _scaleAnimationController.reverse();
+    ticker.whenComplete(_scaleAnimationController.forward);
   }
-
-  /// Обработчик на зажатие кнопки
-  Future<void> _scaleDown() => _scaleAnimationController.reverse();
-
-  /// Обработчик на зажатие кнопки
-  Future<void> _returnToDefault() => _scaleAnimationController.forward();
 }

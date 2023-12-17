@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
-import 'package:pro_words/src/core/app_connect/app_connect.dart';
 import 'package:pro_words/src/core/key_local_storage/key_local_storage.dart';
 import 'package:pro_words/src/core/router/router.dart';
 import 'package:pro_words/src/core/theme/src/app_theme.dart';
 import 'package:pro_words/src/features/app/di/dependencies_scope.dart';
+import 'package:pro_words/src/features/app_connect/data/app_connect.dart';
 
 /// {@template dependencies}
 /// Зависимости приложения
@@ -17,7 +17,7 @@ abstract interface class Dependencies {
   abstract final IKeyLocalStorage keyLocalStorage;
 
   /// {@macro app_router}
-  abstract final AppRouter appRouter;
+  abstract final AppRouter router;
 
   /// {@macro app_theme}
   abstract final IAppTheme appTheme;
@@ -37,7 +37,7 @@ final class $MutableDependencies implements Dependencies {
   late IKeyLocalStorage keyLocalStorage;
 
   @override
-  late AppRouter appRouter;
+  late AppRouter router;
 
   @override
   late IAppTheme appTheme;
@@ -48,14 +48,14 @@ final class $MutableDependencies implements Dependencies {
   /// Возвращает иммутабельные зависимости
   Dependencies freeze() => _$ImmutableDependencies(
         keyLocalStorage: keyLocalStorage,
-        appRouter: appRouter,
+        router: router,
         appTheme: appTheme,
         appConnect: appConnect,
       );
 
   @override
   Future<void> dispose() async {
-    appRouter.dispose();
+    router.dispose();
   }
 }
 
@@ -66,7 +66,7 @@ final class _$ImmutableDependencies implements Dependencies {
   /// {@macro immutable_dependencies}
   const _$ImmutableDependencies({
     required this.keyLocalStorage,
-    required this.appRouter,
+    required this.router,
     required this.appTheme,
     required this.appConnect,
   });
@@ -75,7 +75,7 @@ final class _$ImmutableDependencies implements Dependencies {
   final IKeyLocalStorage keyLocalStorage;
 
   @override
-  final AppRouter appRouter;
+  final AppRouter router;
 
   @override
   final IAppTheme appTheme;
@@ -85,6 +85,6 @@ final class _$ImmutableDependencies implements Dependencies {
 
   @override
   Future<void> dispose() async {
-    appRouter.dispose();
+    router.dispose();
   }
 }

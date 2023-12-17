@@ -1,23 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:pro_words/src/core/theme/theme.dart';
-import 'package:pro_words/src/core/ui_kit/ui_kit.dart';
+import 'package:pro_words/src/core/extensions/extensions.dart';
 import 'package:pro_words/src/features/app/di/dependencies.dart';
+import 'package:pro_words/src/features/app/presentation/app_placeholder.dart';
 
+/// {@template app}
+/// Главный виджет приложения
+/// {@endtemplate}
 @immutable
 class App extends StatelessWidget {
-  /// Главный виджет приложения
-  const App({
-    super.key,
-  });
+  /// {@macro app}
+  const App({super.key});
+
+  /// Глобальный ключ навигатора приложения
+  static final _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   Widget build(BuildContext context) => MediaQuery(
         data: MediaQuery.of(context).copyWith(textScaleFactor: 1),
         child: MaterialApp.router(
-          theme: ThemeScope.getTheme(context),
-          routerConfig: Dependencies.of(context).appRouter.config(
+          theme: context.theme,
+          routerConfig: Dependencies.of(context).router.config(
                 placeholder: (context) => const AppPlaceholder(),
               ),
         ),
       );
+
+  /// Возвращает ключ навигатора приложения
+  GlobalKey<NavigatorState> get navigatorKey => _navigatorKey;
 }

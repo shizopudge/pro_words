@@ -16,6 +16,7 @@ class AppRouter extends $AppRouter {
 
   @override
   late final List<AutoRoute> routes = [
+    /// Домашний экран
     AdaptiveRoute(
       page: HomeRoute.page,
       path: '/',

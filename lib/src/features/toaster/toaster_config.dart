@@ -21,6 +21,10 @@ class ToasterConfig extends Equatable {
   /// {@macro toaster_type}
   final ToasterType type;
 
+  /// Если true, то тостер добавиться в самое начало очереди и будет показан
+  /// без замедления
+  final bool isHighPriority;
+
   /// {@macro toaster_config}
   const ToasterConfig({
     required this.message,
@@ -28,6 +32,7 @@ class ToasterConfig extends Equatable {
     this.action,
     this.duration = const Duration(milliseconds: 2500),
     this.type = ToasterType.message,
+    this.isHighPriority = false,
   });
 
   @override
@@ -46,5 +51,6 @@ class ToasterConfig extends Equatable {
 enum ToasterType {
   error,
   message,
-  warning;
+  warning,
+  success;
 }

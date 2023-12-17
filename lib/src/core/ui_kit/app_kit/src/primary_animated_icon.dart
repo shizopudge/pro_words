@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
+/// {@template primary_animated_icon}
+/// Основная анимировання иконка}
+/// {@endtemplate}
 @immutable
 class PrimaryAnimatedIcon extends StatefulWidget {
   /// Название иконки
@@ -17,14 +20,31 @@ class PrimaryAnimatedIcon extends StatefulWidget {
   /// Обработчик на конец анимации
   final VoidCallback? onAnimationEnd;
 
-  /// Основная анимированная иконка
+  /// Если true, то анимация зациклена
+  final bool _isLooped;
+
+  /// Цвет иконки
+  final Color? color;
+
+  /// {@macro primary_animated_icon}
   const PrimaryAnimatedIcon({
     required this.name,
     required this.size,
     this.listener,
     this.onAnimationEnd,
+    this.color,
     super.key,
-  });
+  }) : _isLooped = false;
+
+  /// {@macro primary_animated_icon}
+  const PrimaryAnimatedIcon.looped({
+    required this.name,
+    required this.size,
+    this.color,
+    super.key,
+  })  : _isLooped = true,
+        listener = null,
+        onAnimationEnd = null;
 
   @override
   State<PrimaryAnimatedIcon> createState() => _PrimaryAnimatedIconState();
@@ -60,18 +80,41 @@ class _PrimaryAnimatedIconState extends State<PrimaryAnimatedIcon>
   }
 
   @override
-  Widget build(BuildContext context) => LottieBuilder.asset(
-        widget.name,
-        controller: _animationController,
-        onLoaded: (composition) {
-          _animationController.duration = composition.duration;
-          _animationController
-              .forward()
-              .whenComplete(() => widget.onAnimationEnd?.call());
-        },
-        width: widget.size,
-        height: widget.size,
-      );
+  Widget build(BuildContext context) {
+    final icon = LottieBuilder.asset(
+      widget.name,
+      controller: _animationController,
+      onLoaded: (composition) {
+        _animationController.duration = composition.duration;
+        _playAnimation();
+      },
+      width: widget.size,
+      height: widget.size,
+    );
+
+    final color = widget.color;
+
+    if (color == null) return icon;
+
+    return ColorFiltered(
+      colorFilter: ColorFilter.mode(
+        color,
+        BlendMode.srcIn,
+      ),
+      child: icon,
+    );
+  }
+
+  /// Проигрывает анимацию
+  void _playAnimation() {
+    if (widget._isLooped) {
+      _animationController.repeat();
+    } else {
+      _animationController
+          .forward()
+          .whenComplete(() => widget.onAnimationEnd?.call());
+    }
+  }
 
   /// Слушатель анимации
   void _animationListener() => _listener?.call(_animationController);

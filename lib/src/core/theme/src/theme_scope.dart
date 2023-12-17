@@ -3,12 +3,15 @@ import 'package:pro_words/src/core/extensions/extensions.dart';
 import 'package:pro_words/src/core/key_local_storage/key_local_storage.dart';
 import 'package:pro_words/src/core/logger/src/logger.dart';
 
+/// {@template theme_scope}
+/// Theme scope
+/// {@endtemplate}
 @immutable
 class ThemeScope extends StatefulWidget {
   /// Child widget
   final Widget child;
 
-  /// Theme scope
+  /// {@macro theme_scope}
   const ThemeScope({
     required this.child,
     super.key,
@@ -62,9 +65,9 @@ class ThemeScope extends StatefulWidget {
 
 class ThemeScopeState extends State<ThemeScope> {
   /// {@template theme_controller}
-  /// Контроллер темы приложения
+  /// Контроллер ключа темы приложения
   /// {@endtemplate}
-  late final ValueNotifier<ThemeData> _themeController;
+  late final ValueNotifier<String> _themeKeyController;
 
   /// {@macro key_local_storage}
   late final IKeyLocalStorage _keyLocalStorage;
@@ -73,13 +76,14 @@ class ThemeScopeState extends State<ThemeScope> {
   void initState() {
     super.initState();
     _keyLocalStorage = context.dependencies.keyLocalStorage;
-    _themeController = ValueNotifier<ThemeData>(_currentThemeFromLocalStorage)
-      ..addListener(_onThemeChange);
+    _themeKeyController =
+        ValueNotifier<String>(_currentThemeKeyFromLocalStorage)
+          ..addListener(_onThemeChange);
   }
 
   @override
   void dispose() {
-    _themeController
+    _themeKeyController
       ..removeListener(_onThemeChange)
       ..dispose();
     super.dispose();
@@ -87,7 +91,7 @@ class ThemeScopeState extends State<ThemeScope> {
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-        animation: _themeController,
+        animation: _themeKeyController,
         builder: (context, _) => _InheritedTheme(
           state: this,
           theme: theme,
@@ -96,23 +100,15 @@ class ThemeScopeState extends State<ThemeScope> {
       );
 
   /// Перекючает тему
-  void toggleTheme() {
-    if (isDarkTheme) {
-      theme = context.appTheme.lightTheme;
-    } else {
-      theme = context.appTheme.darkTheme;
-    }
-  }
+  void toggleTheme() => themeKey =
+      isDark ? context.appTheme.lightThemeKey : context.appTheme.darkThemeKey;
 
   /// Метод вызывающийся при смене темы
   Future<void> _onThemeChange() async {
     try {
-      late final String newThemeKey;
-      if (theme == context.appTheme.darkTheme) {
-        newThemeKey = context.appTheme.darkThemeKey;
-      } else {
-        newThemeKey = context.appTheme.lightThemeKey;
-      }
+      final String newThemeKey = isDark
+          ? context.appTheme.darkThemeKey
+          : context.appTheme.lightThemeKey;
       await _keyLocalStorage.setValue(
         StorageKeys.theme.key,
         newThemeKey,
@@ -126,18 +122,14 @@ class ThemeScopeState extends State<ThemeScope> {
     }
   }
 
-  /// Возвращает текущую тему и локального хранилища
-  ThemeData get _currentThemeFromLocalStorage {
+  /// Возвращает текущий ключ темы из локального хранилища
+  String get _currentThemeKeyFromLocalStorage {
     try {
-      final themeKey = _keyLocalStorage.getValue(StorageKeys.theme.key) ??
+      return _keyLocalStorage.getValue(StorageKeys.theme.key) ??
           context.appTheme.darkThemeKey;
-      if (themeKey == context.appTheme.darkThemeKey) {
-        return context.appTheme.darkTheme;
-      }
-      return context.appTheme.lightTheme;
     } on Object catch (error, stackTrace) {
       L.error(
-        'Something went wrong during theme was reading from local storage',
+        'Something went wrong during theme key was reading from local storage',
         error: error,
         stackTrace: stackTrace,
       );
@@ -145,24 +137,24 @@ class ThemeScopeState extends State<ThemeScope> {
     }
   }
 
-  /// Возвращает тему
-  ThemeData get theme => _themeController.value;
+  /// Возвращает ключ темы
+  String get themeKey => _themeKeyController.value;
 
-  /// Устанавливает тему
-  set theme(ThemeData data) {
-    if (_themeController.value != data) {
-      _themeController.value = data;
-    }
+  /// Устанавливает ключ темs
+  set themeKey(String newThemeKey) {
+    if (themeKey == newThemeKey) return;
+    _themeKeyController.value = newThemeKey;
   }
 
   /// Возвращает true, если тема темная
-  bool get isDarkTheme => context.appTheme.isDarkTheme(theme);
+  bool get isDark => context.appTheme.isDark(themeKey);
 
   /// Возвращает true, если тема светлая
-  bool get isLightTheme => context.appTheme.isLightTheme(theme);
+  bool get isLight => context.appTheme.isLight(themeKey);
 
-  /// Возвращает контроллер темы приложения
-  ValueNotifier<ThemeData> get controller => _themeController;
+  /// Возвращает тему
+  ThemeData get theme =>
+      isDark ? context.appTheme.darkTheme : context.appTheme.lightTheme;
 }
 
 @immutable
@@ -178,6 +170,7 @@ class _InheritedTheme extends InheritedWidget {
     required this.state,
     required this.theme,
     required super.child,
+    super.key,
   });
 
   @override

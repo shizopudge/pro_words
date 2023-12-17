@@ -14,6 +14,9 @@ abstract interface class IAppColors {
   /// Red
   Color get red;
 
+  /// Blue
+  Color get blue;
+
   /// Purple
   Color get purple;
 
@@ -32,6 +35,9 @@ class AppColors implements IAppColors {
 
   @override
   Color get red => Colors.red;
+
+  @override
+  Color get blue => Colors.blue;
 
   @override
   Color get purple => Colors.purple.shade300;
