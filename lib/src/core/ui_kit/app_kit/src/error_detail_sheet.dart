@@ -17,7 +17,6 @@ class ErrorDetailSheet extends StatelessWidget {
   const ErrorDetailSheet._({
     required this.title,
     required this.message,
-    super.key,
   });
 
   static Future<void> show(

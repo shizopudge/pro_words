@@ -31,7 +31,6 @@ class PrimaryBottomSheet extends StatelessWidget {
     required this.dragHandleColor,
     required this.backgroundColor,
     required this.blurBackground,
-    super.key,
   });
 
   @override
@@ -66,7 +65,6 @@ class _SheetAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   const _SheetAppBar({
     required this.title,
-    super.key,
   });
 
   @override
@@ -110,7 +108,6 @@ class _BottomSheet extends StatelessWidget {
     required this.bottomSheetTheme,
     required this.dragHandleColor,
     required this.backgroundColor,
-    super.key,
   });
 
   @override

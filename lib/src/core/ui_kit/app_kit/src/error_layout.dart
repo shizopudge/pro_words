@@ -189,7 +189,6 @@ class _BottomButton extends AnimatedWidget {
     required this.onTap,
     required this.errorIconAppearanceController,
     required this.text,
-    super.key,
   }) : super(listenable: errorIconAppearanceController);
 
   @override

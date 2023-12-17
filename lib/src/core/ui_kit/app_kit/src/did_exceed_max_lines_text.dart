@@ -79,7 +79,6 @@ class _DidExceedMaxLinesText extends StatefulWidget {
     required this.style,
     required this.textAlign,
     required this.textDirection,
-    super.key,
   });
 
   @override

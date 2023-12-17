@@ -135,7 +135,6 @@ class _AppConnectSheet extends StatefulWidget {
     required this.onTap,
     required this.isCheckingController,
     required this.isVisible,
-    super.key,
   });
 
   @override
@@ -290,9 +289,7 @@ class _AppConnectSheetState extends State<_AppConnectSheet>
 /// Заголовок шита
 @immutable
 class _Title extends StatelessWidget {
-  const _Title({
-    super.key,
-  });
+  const _Title();
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -318,7 +315,6 @@ class _InternetIcon extends StatelessWidget {
 
   const _InternetIcon({
     required this.size,
-    super.key,
   });
 
   @override

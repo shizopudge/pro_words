@@ -170,7 +170,6 @@ class _InheritedTheme extends InheritedWidget {
     required this.state,
     required this.theme,
     required super.child,
-    super.key,
   });
 
   @override
