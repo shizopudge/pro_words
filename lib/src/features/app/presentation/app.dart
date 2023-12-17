@@ -11,9 +11,6 @@ class App extends StatelessWidget {
   /// {@macro app}
   const App({super.key});
 
-  /// Глобальный ключ навигатора приложения
-  static final _navigatorKey = GlobalKey<NavigatorState>();
-
   @override
   Widget build(BuildContext context) => MediaQuery(
         data: MediaQuery.of(context).copyWith(textScaleFactor: 1),
@@ -24,7 +21,4 @@ class App extends StatelessWidget {
               ),
         ),
       );
-
-  /// Возвращает ключ навигатора приложения
-  GlobalKey<NavigatorState> get navigatorKey => _navigatorKey;
 }
