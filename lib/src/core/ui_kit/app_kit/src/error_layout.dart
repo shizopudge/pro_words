@@ -1,8 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:pro_words/src/core/extensions/extensions.dart';
 import 'package:pro_words/src/core/resources/resources.dart';
-import 'package:pro_words/src/core/ui_kit/app_kit/app_kit.dart';
-import 'package:pro_words/src/core/ui_kit/utils_kit/src/animated_fade_slide_transition.dart';
+import 'package:pro_words/src/core/ui_kit/ui_kit.dart';
 
 /// {@template error_layout}
 /// Виджет отображающий ошибку инициализации приложения

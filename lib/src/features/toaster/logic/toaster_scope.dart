@@ -2,8 +2,8 @@ import 'dart:collection';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:pro_words/src/features/toaster/toaster.dart';
-import 'package:pro_words/src/features/toaster/toaster_config.dart';
+import 'package:pro_words/src/features/toaster/domain/toaster_config.dart';
+import 'package:pro_words/src/features/toaster/presentation/toaster.dart';
 
 /// {@template toaster_scope}
 /// Область видимости тостера
@@ -42,13 +42,13 @@ class ToasterScope extends StatefulWidget {
 
 class ToasterScopeState extends State<ToasterScope> {
   /// Очередь тостов
-  late final Queue<ToasterController> _queue;
+  late final Queue<ToasterEntry> _queue;
 
   /// {@macro toaster_state}
   late ToasterState _state;
 
-  /// {@macro toaster_controller}
-  ToasterController? _currentController;
+  /// {@macro toaster_entry}
+  ToasterEntry? _currentEntry;
 
   /// {template stored_config}
   /// Сохраненный конфиг тостера
@@ -63,13 +63,13 @@ class ToasterScopeState extends State<ToasterScope> {
   @override
   void initState() {
     super.initState();
-    _queue = Queue<ToasterController>();
+    _queue = Queue<ToasterEntry>();
     _state = ToasterState.idle;
   }
 
   @override
   void dispose() {
-    _currentController?.entry
+    _currentEntry?.overlayEntry
       ?..remove()
       ..dispose();
     _overlay?.dispose();
@@ -88,40 +88,49 @@ class ToasterScopeState extends State<ToasterScope> {
     required ToasterConfig config,
   }) {
     _overlay ??= Overlay.of(context);
-    final entry = _createEntry(config);
-    final controller = ToasterController(config: config, entry: entry);
+    final overlayEntry = _createOverlayEntry(config);
+    final entry = ToasterEntry(config: config, overlayEntry: overlayEntry);
     if (config.isHighPriority) {
-      if (!_isCanBeAddedToQueueForHighPriority(controller)) return;
-      _queue.addFirst(controller);
+      if (!_isCanBeAddedToQueueForHighPriority(entry)) return;
+      _queue.addFirst(entry);
       _storeToasterConfig();
-      _hideCurrentToast();
-      _updateToast();
-      _restoreToasterController();
+      hideCurrentToaster();
+      _updateToaster();
+      _restoreToasterEntry();
     } else {
-      if (_isCanBeAddedToQueue(controller)) _queue.addLast(controller);
-      if (_state != ToasterState.showed) _updateToast();
+      if (_isCanBeAddedToQueue(entry)) _queue.addLast(entry);
+      if (_state != ToasterState.showed) _updateToaster();
     }
   }
 
   /// Очистить очередь тостов
   void clearToasts() {
     _queue.clear();
-    _hideCurrentToast();
+    hideCurrentToaster();
   }
 
-  /// Восстанавливает контроллер тостера и помещает его в начало очереди
-  void _restoreToasterController() {
+  /// Исчезновение текущего тоста
+  void hideCurrentToaster() {
+    _currentEntry?.overlayEntry.remove();
+    _currentEntry?.overlayEntry.dispose();
+    if (_currentEntry?.isRestored ?? false) _storedConfig = null;
+    _currentEntry = null;
+    _state = ToasterState.idle;
+  }
+
+  /// Восстанавливает запись тостера и помещает ее в начало очереди
+  void _restoreToasterEntry() {
     final config = _storedConfig;
     if (config != null) {
-      final entry = _createEntry(config);
-      final restoredController =
-          ToasterController.restored(config: config, entry: entry);
-      _queue.addFirst(restoredController);
+      final entry = _createOverlayEntry(config);
+      final restoredEntry =
+          ToasterEntry.restored(config: config, overlayEntry: entry);
+      _queue.addFirst(restoredEntry);
     }
   }
 
   /// Создает [OverlayEntry]
-  OverlayEntry _createEntry(ToasterConfig config) => OverlayEntry(
+  OverlayEntry _createOverlayEntry(ToasterConfig config) => OverlayEntry(
         builder: (context) => Toaster(
           config: config,
           onDismiss: _onDismiss,
@@ -131,27 +140,18 @@ class ToasterScopeState extends State<ToasterScope> {
   /// Сохраняет текущую конфигурацию контроллера, если [_state] == [ToasterState.showed]
   void _storeToasterConfig() {
     if (_state != ToasterState.showed) return;
-    _storedConfig = _currentController?.config;
+    _storedConfig = _currentEntry?.config;
   }
 
   /// Обновление тоста
-  void _updateToast() {
+  void _updateToaster() {
     if (_queue.isEmpty) return;
-    final controller = _queue.removeFirst();
-    if (controller == _currentController) return;
-    if (_currentController != null) _hideCurrentToast();
-    _overlay?.insert(controller.entry);
-    _currentController = controller;
+    final entry = _queue.removeFirst();
+    if (entry == _currentEntry) return;
+    if (_currentEntry != null) hideCurrentToaster();
+    _overlay?.insert(entry.overlayEntry);
+    _currentEntry = entry;
     _state = ToasterState.showed;
-  }
-
-  /// Исчезновение текущего тоста
-  void _hideCurrentToast() {
-    _currentController?.entry.remove();
-    _currentController?.entry.dispose();
-    if (_currentController?.isRestored ?? false) _storedConfig = null;
-    _currentController = null;
-    _state = ToasterState.idle;
   }
 
   /// Возвращает true, если тостер может быть добавлен в очередь
@@ -161,21 +161,21 @@ class ToasterScopeState extends State<ToasterScope> {
   /// 1. В очереди нет контроллеров равынх передавемому
   /// 2. Длина очереди не больше 3
   /// 3. Текущий контроллер не равен передаваемеому
-  bool _isCanBeAddedToQueue(ToasterController controller) =>
-      _queue.where((element) => element == controller).isEmpty &&
+  bool _isCanBeAddedToQueue(ToasterEntry entry) =>
+      _queue.where((element) => element == entry).isEmpty &&
       _queue.length <= 3 &&
-      _currentController != controller;
+      _currentEntry != entry;
 
-  /// Возвращает true, если в очереди нет контроллеров равынх передавемому и
-  /// текущий контроллер не равен передаваемому
-  bool _isCanBeAddedToQueueForHighPriority(ToasterController controller) =>
-      _queue.where((element) => element == controller).isEmpty &&
-      _currentController != controller;
+  /// Возвращает true, если в очереди нет записей равных передавемой и текущая
+  /// запись не равна передаваемой
+  bool _isCanBeAddedToQueueForHighPriority(ToasterEntry entry) =>
+      _queue.where((element) => element == entry).isEmpty &&
+      _currentEntry != entry;
 
-  /// Слушатель статуса анимации тостера
+  /// Обработчик на исчезновение тостера
   void _onDismiss() {
-    _hideCurrentToast();
-    _updateToast();
+    hideCurrentToaster();
+    _updateToaster();
   }
 }
 
@@ -197,30 +197,30 @@ class _InheritedToaster extends InheritedWidget {
   bool updateShouldNotify(_InheritedToaster oldWidget) => false;
 }
 
-/// {@template toaster_controller}
-/// Контроллер тостера
+/// {@template toaster_entry}
+/// Запись тостера
 /// {@endtemplate}
 @immutable
-class ToasterController extends Equatable {
+class ToasterEntry extends Equatable {
   /// {@macro toast_config}
   final ToasterConfig config;
 
   /// Текущее наложение
-  final OverlayEntry entry;
+  final OverlayEntry overlayEntry;
 
-  /// Если true, значит контроллер был восстановлен
+  /// Если true, значит запись был восстановлен
   final bool isRestored;
 
-  /// {@macro toaster_controller}
-  const ToasterController({
+  /// {@macro toaster_entry}
+  const ToasterEntry({
     required this.config,
-    required this.entry,
+    required this.overlayEntry,
   }) : isRestored = false;
 
-  /// Конструктор восстановленного контроллера
-  const ToasterController.restored({
+  /// Конструктор восстановленной записи
+  const ToasterEntry.restored({
     required this.config,
-    required this.entry,
+    required this.overlayEntry,
   }) : isRestored = true;
 
   @override

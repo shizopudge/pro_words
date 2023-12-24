@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:pro_words/src/core/router/router.dart';
 import 'package:pro_words/src/core/theme/theme.dart';
 import 'package:pro_words/src/features/app/di/dependencies.dart';
-import 'package:pro_words/src/features/toaster/toaster_config.dart';
-import 'package:pro_words/src/features/toaster/toaster_scope.dart';
+import 'package:pro_words/src/features/toaster/domain/toaster_config.dart';
+import 'package:pro_words/src/features/toaster/logic/toaster_scope.dart';
 
 extension BuildContextX on BuildContext {
   /// Media query
@@ -43,7 +43,7 @@ extension BuildContextX on BuildContext {
     required String message,
     Widget? icon,
     Widget? action,
-    Duration duration = const Duration(milliseconds: 2500),
+    Duration duration = const Duration(milliseconds: 3000),
     ToasterType type = ToasterType.message,
     bool isHighPriority = false,
   }) =>

@@ -30,7 +30,7 @@ class ToasterConfig extends Equatable {
     required this.message,
     this.icon,
     this.action,
-    this.duration = const Duration(milliseconds: 2500),
+    this.duration = const Duration(milliseconds: 3000),
     this.type = ToasterType.message,
     this.isHighPriority = false,
   });

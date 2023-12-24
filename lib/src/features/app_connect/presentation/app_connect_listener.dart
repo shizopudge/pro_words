@@ -216,8 +216,11 @@ class _AppConnectSheetState extends State<_AppConnectSheet>
                             animation: widget.isCheckingController,
                             builder: (context, child) => PrimaryElevatedButton(
                               onTap: widget.onTap,
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 16, horizontal: 24),
+                              padding: const EdgeInsets.only(
+                                left: 24,
+                                right: 24,
+                                bottom: 16,
+                              ),
                               isLoading: _isChecking,
                               child: const Text(
                                 'Проверить подключение',

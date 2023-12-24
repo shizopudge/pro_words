@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// {@template animated_dade_slide_transition}
-/// Анимированное появление/исчезновение виджета c скольжением м выцветанием
+/// Анимированное появление/исчезновение виджета c скольжением и выцветанием
 /// {@endtemplate}
 @immutable
 class AnimatedFadeSlideTransition extends StatefulWidget {
@@ -18,7 +18,7 @@ class AnimatedFadeSlideTransition extends StatefulWidget {
   const AnimatedFadeSlideTransition({
     required this.child,
     required this.isVisible,
-    this.duration = const Duration(milliseconds: 400),
+    this.duration = const Duration(milliseconds: 350),
     super.key,
   });
 
@@ -42,39 +42,28 @@ class _AnimatedFadeSlideTransitionState
   /// {@macro slide_animation}
   late Animation<Offset> _slideAnimation;
 
-  /// Начальное смещение
-  final Tween<Offset> _initialOffset = Tween<Offset>(
+  /// Смещение при появлении
+  final Tween<Offset> _appearOffset = Tween<Offset>(
     begin: const Offset(0, -1),
     end: Offset.zero,
   );
 
   /// Смещение при исчезновении
   final Tween<Offset> _disappearOffset = Tween<Offset>(
-    begin: const Offset(0, -1),
-    end: Offset.zero,
+    begin: Offset.zero,
+    end: const Offset(0, 1),
   );
 
   @override
   void initState() {
     super.initState();
-    _slideController = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
-    _fadeController = AnimationController(
-      value: widget.isVisible ? 1.0 : 0.0,
-      vsync: this,
-      duration: widget.duration,
-    );
-    _slideAnimation = _initialOffset.animate(_slideController);
+    _initAnimations();
   }
 
   @override
-  void didUpdateWidget(AnimatedFadeSlideTransition oldWidget) {
+  void didUpdateWidget(covariant AnimatedFadeSlideTransition oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isVisible != oldWidget.isVisible) {
-      _playAnimations();
-    }
+    if (_isWidgetUpdated(oldWidget)) _playAnimations();
   }
 
   @override
@@ -90,28 +79,27 @@ class _AnimatedFadeSlideTransitionState
   Widget build(BuildContext context) => AnimatedSize(
         duration: const Duration(milliseconds: 100),
         child: AnimatedBuilder(
-          animation: Listenable.merge(_controllers),
-          builder: (context, _) {
-            if (_isDisappeared) return const SizedBox.shrink();
-
-            return SlideTransition(
-              position: _slideAnimation,
-              child: FadeTransition(
-                opacity: _fadeController,
-                child: widget.child,
-              ),
-            );
-          },
+          animation: _fadeController,
+          builder: (context, _) => _isDisappeared
+              ? const SizedBox.shrink()
+              : SlideTransition(
+                  position: _slideAnimation,
+                  child: FadeTransition(
+                    opacity: _fadeController,
+                    child: widget.child,
+                  ),
+                ),
         ),
       );
 
+  /// Проигрывает анимации
   void _playAnimations() {
-    if (widget.isVisible) {
+    if (_isVisible) {
       // Появление виджета
       _fadeController.forward();
       // Переопределение анимации скольжения с новым смещением, чтобы
       // анимируемый виджет выезжал сверху при появлении
-      _slideAnimation = _initialOffset.animate(_slideController);
+      _slideAnimation = _appearOffset.animate(_slideController);
     } else {
       // Исчезновение виджета
       _fadeController.reverse();
@@ -125,6 +113,25 @@ class _AnimatedFadeSlideTransitionState
       ..forward();
   }
 
+  /// Инициализация анимаций
+  void _initAnimations() {
+    _slideController = AnimationController(
+      vsync: this,
+      duration: widget.duration,
+    );
+    _fadeController = AnimationController(
+      value: _isVisible ? 1.0 : 0.0,
+      vsync: this,
+      duration: widget.duration,
+    );
+    _slideAnimation = (_isVisible ? _disappearOffset : _appearOffset)
+        .animate(_slideController);
+  }
+
+  /// Возвращает true, если виджет обновился
+  bool _isWidgetUpdated(covariant AnimatedFadeSlideTransition oldWidget) =>
+      oldWidget.isVisible != _isVisible;
+
   /// Возвращает контроллеры анимаций
   List<AnimationController> get _controllers => [
         _slideController,
@@ -133,4 +140,7 @@ class _AnimatedFadeSlideTransitionState
 
   /// Возвращает true, если значение анимации выцветания меньше или равно 0.15
   bool get _isDisappeared => _fadeController.value <= 0.15;
+
+  /// Возвращает true, если виджет отображен на экране
+  bool get _isVisible => widget.isVisible;
 }

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:pro_words/src/core/extensions/extensions.dart';
-import 'package:pro_words/src/features/toaster/toaster_config.dart';
+import 'package:pro_words/src/features/toaster/domain/toaster_config.dart';
 
 /// {@template toaster}
 /// Тостер
@@ -33,25 +33,15 @@ class _ToasterState extends State<Toaster> with TickerProviderStateMixin {
   /// {@macro fade_controller}
   late final AnimationController _fadeController;
 
-  /// {@template pre_dismiss_slide_controller}
-  /// Контроллер анимации скольжения перед исчезновением
+  /// {@template scale_controller}
+  /// Контроллер масштаба
   /// {@endtemplate}
-  late final AnimationController _preDismissSlideController;
-
-  /// {@template pre_dismiss_scale_controller}
-  /// Контроллер анимации масштаба перед исчезновением
-  /// {@endtemplate}
-  late final AnimationController _preDismissScaleController;
+  late final AnimationController _scaleController;
 
   /// {@template slide_animation}
   /// Анимация скольжения
   /// {@endtemplate}
-  late final Animation<Offset> _slideAnimation;
-
-  /// {@template pre_dismiss_slide}
-  /// Анимация скольжения перед исчезновением
-  /// {@endtemplate}
-  late final Animation<Offset> _preDismissSlide;
+  late Animation<Offset> _slideAnimation;
 
   /// @macro timer}
   late final Timer timer;
@@ -60,26 +50,6 @@ class _ToasterState extends State<Toaster> with TickerProviderStateMixin {
   /// Интервал между тиками таймера
   /// {@endtemplate}
   late final Duration _perTickInterval;
-
-  /// {@template slide_duration}
-  /// Длительность скольжения
-  /// {@endtemplate}
-  static const Duration _slideDuration = Duration(milliseconds: 200);
-
-  /// {@template fade_duration}
-  /// Длительность выцветания
-  /// {@endtemplate}
-  static const Duration _fadeDuration = Duration(milliseconds: 250);
-
-  /// {@template pre_dismiss_slide_duration}
-  /// Длительность скольжения перед исчезновением
-  /// {@endtemplate}
-  static const Duration _preDismissSlideDuration = Duration(milliseconds: 175);
-
-  /// {@template pre_dismiss_scale_duration}
-  /// Длительность масштабирования перед исчезновением
-  /// {@endtemplate}
-  static const Duration _preDismissScaleDuration = Duration(milliseconds: 150);
 
   @override
   void initState() {
@@ -95,8 +65,7 @@ class _ToasterState extends State<Toaster> with TickerProviderStateMixin {
     timer.cancel();
     _slideController.dispose();
     _fadeController.dispose();
-    _preDismissSlideController.dispose();
-    _preDismissScaleController.dispose();
+    _scaleController.dispose();
     super.dispose();
   }
 
@@ -107,10 +76,10 @@ class _ToasterState extends State<Toaster> with TickerProviderStateMixin {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
             child: ScaleTransition(
-              scale: _preDismissScaleController.view,
-              child: SlideTransition(
-                position: _preDismissSlide,
-                child: SlideTransition(
+              scale: _scaleController.view,
+              child: AnimatedBuilder(
+                animation: _slideController,
+                builder: (context, child) => SlideTransition(
                   position: _slideAnimation,
                   child: FadeTransition(
                     opacity: _fadeController.view,
@@ -162,25 +131,17 @@ class _ToasterState extends State<Toaster> with TickerProviderStateMixin {
       vsync: this,
       duration: _fadeDuration,
     );
-    _preDismissSlideController = AnimationController(
-      vsync: this,
-      duration: _preDismissSlideDuration,
-    );
-    _preDismissScaleController = AnimationController(
+    _scaleController = AnimationController(
       value: 1.0,
       lowerBound: 0.95,
       upperBound: 1.0,
-      duration: _preDismissScaleDuration,
+      duration: _scaleDuration,
       vsync: this,
     );
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, -1),
       end: Offset.zero,
     ).animate(_slideController);
-    _preDismissSlide = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, .5),
-    ).animate(_preDismissSlideController);
     // Запуск анимаций
     for (final controller in _primaryControllers) {
       controller.forward();
@@ -205,25 +166,43 @@ class _ToasterState extends State<Toaster> with TickerProviderStateMixin {
   }
 
   /// Проигрывает анимации исчезновения
-  void _playDismissAnimations() {
-    _preDismissScaleController.reverse();
-    _preDismissSlideController.forward().whenComplete(
-      () async {
-        _preDismissScaleController.forward();
-        _preDismissSlideController
-          ..duration = _preDismissSlideReverseDuration
-          ..reverse().whenComplete(
-            () {
-              _slideController
-                ..duration = _slideReverseDuration
-                ..reverse().whenComplete(widget.onDismiss);
-              _fadeController
-                ..duration = _fadeReverseDuration
-                ..reverse();
-            },
-          );
-      },
-    );
+  Future<void> _playDismissAnimations() async {
+    // Начинает уменьшение размера
+    _scaleController.reverse();
+
+    // Сброс значения контроллера скольжения на 0.0, после чего запуск с
+    // обновленной [_slideAnimation] с [Offset.zero] до [Offset(0, .5)]
+    _slideController.reset();
+    _slideAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(0, .5),
+    ).animate(_slideController);
+    await _slideController.forward();
+
+    // По завершении анимации скольжения перед исчезновением начинается анимация
+    // возвращения масштаба
+    _scaleController.forward();
+
+    // Запуск анимации скольжения на стандартный оффсет и обновление
+    // длительности
+    _slideController.duration =
+        Duration(milliseconds: _slideDuration.inMilliseconds ~/ 2);
+    await _slideController.reverse();
+
+    // Запуск анимации выцветания в обратном направлении
+    _fadeController.reverse();
+
+    // Сброс значения контроллера скольжения на 0.0, после чего запуск с
+    // обновленной [_slideAnimation] с [Offset.zero] до [Offset(0, -1)]
+    _slideController.reset();
+    _slideAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(0, -1),
+    ).animate(_slideController);
+    await _slideController.forward();
+
+    // Вызов колбэка на исчезновение тостера
+    widget.onDismiss.call();
   }
 
   /// Возвращает основные контроллеры анимаций
@@ -232,15 +211,18 @@ class _ToasterState extends State<Toaster> with TickerProviderStateMixin {
         _fadeController,
       ];
 
-  /// Возвращает длительность обратной анимации выцветания
-  Duration get _fadeReverseDuration =>
-      Duration(milliseconds: _fadeDuration.inMilliseconds ~/ 1.5);
+  /// {@template slide_duration}
+  /// Длительность скольжения
+  /// {@endtemplate}
+  Duration get _slideDuration => const Duration(milliseconds: 250);
 
-  /// Возвращает длительность обратной анимации скольжения
-  Duration get _slideReverseDuration =>
-      Duration(milliseconds: _slideDuration.inMilliseconds ~/ 1.5);
+  /// {@template fade_duration}
+  /// Длительность выцветания
+  /// {@endtemplate}
+  Duration get _fadeDuration => const Duration(milliseconds: 200);
 
-  /// Возвращает длительность обратной анимации скольжения перед исчезновением
-  Duration get _preDismissSlideReverseDuration =>
-      Duration(milliseconds: _preDismissSlideDuration.inMilliseconds ~/ 1.5);
+  /// {@template pre_dismiss_scale_duration}
+  /// Длительность масштабирования перед исчезновением
+  /// {@endtemplate}
+  Duration get _scaleDuration => const Duration(milliseconds: 100);
 }
